@@ -5,32 +5,47 @@ import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
   const navigate = useNavigate();
+
+  const menu_list = [
+    {
+      id: "manage",
+      text: "Manage Passwords",
+      onclick: () => {
+        navigate("/manage");
+      },
+    },
+    {
+      id: "import_export",
+      text: "Import/Export Passwords",
+      onclick: () => {},
+    },
+    {
+      id: "sync",
+      text: "Sync Passwords",
+      onclick: () => {},
+    },
+    {
+      id: "change_master_pass",
+      text: "Change master Passwords",
+      onclick: () => {},
+    },
+  ];
+
   return (
     <>
       <ul className="menu-list">
-        <li
-          
-          onClick={() => {
-            navigate("/manage");
-          }}
-        >
-          Manage Passwords
-        </li>
-        <li
-          
-        >
-          Import/Export Passwords
-        </li>
-        <li
-          
-          >
-            Sync Passwords
-          </li>
-          <li
-          
-          >
-            Change master Passwords
-          </li>
+        {menu_list.map((op) => {
+          return (
+            <li
+              key={op.id}
+              onClick={() => {
+                op.onclick();
+              }}
+            >
+              {op.text}
+            </li>
+          );
+        })}
       </ul>
     </>
   );
