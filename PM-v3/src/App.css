@@ -3,15 +3,33 @@
   flex-direction: column; /* Stack items vertically */
   justify-content: center; /* Center horizontally */
   align-items: center; /* Center vertically */
-  min-height: 50vh; /* Full viewport height */
+  min-height: 70vh; /* Full viewport height */
   margin: 0;
   font-family: "Avenir Next", "Avenir", sans-serif;
 }
 .menu-list{
-  font-size: 3em;
+  font-size: 1.5em;
   list-style-type: none;
+  display: flex;
+  flex-direction: column; /* Default for mobile */
+  align-items: center;
+  justify-content: center; /* Center horizontally */
+  padding: 0;
+  margin: 0;
 }
 
 .menu-list li{
   cursor: pointer;
+  padding-top: 20%;
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+  .menu-list {
+    font-size: 3em;
+  }
+
+  .menu-list li {
+    padding-top: 10%;
+  }
 }

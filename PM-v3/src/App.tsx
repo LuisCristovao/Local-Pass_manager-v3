@@ -16,6 +16,21 @@ function App() {
         >
           Manage Passwords
         </li>
+        <li
+          
+        >
+          Import/Export Passwords
+        </li>
+        <li
+          
+          >
+            Sync Passwords
+          </li>
+          <li
+          
+          >
+            Change master Passwords
+          </li>
       </ul>
     </>
   );
