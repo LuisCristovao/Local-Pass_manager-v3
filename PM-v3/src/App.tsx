@@ -1,18 +1,24 @@
-import { useState } from 'react'
-
-import './App.css'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
+import "./App.css";
+import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
-  
-
+  const navigate = useNavigate();
   return (
     <>
-      
-      <ul className='menu-list'>
-        <li>Manage Passwords</li>
+      <ul className="menu-list">
+        <li
+          
+          onClick={() => {
+            navigate("/manage");
+          }}
+        >
+          Manage Passwords
+        </li>
       </ul>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

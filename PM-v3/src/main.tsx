@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')!).render(
     <HashRouter>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/share" element={<ManagePasswords />} />
+        <Route path="/manage" element={<ManagePasswords />} />
       </Routes>
     </HashRouter>
   </StrictMode>,

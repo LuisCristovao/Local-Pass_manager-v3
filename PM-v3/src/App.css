@@ -11,3 +11,7 @@
   font-size: 3em;
   list-style-type: none;
 }
+
+.menu-list li{
+  cursor: pointer;
+}
