@@ -8,12 +8,12 @@ import ManagePasswords from './assets/components/ManagePasswords.tsx'; // Import
 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  /*<StrictMode>*/
     <HashRouter>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/manage" element={<ManagePasswords />} />
       </Routes>
     </HashRouter>
-  </StrictMode>,
+  /*</StrictMode>,*/
 );

@@ -1,52 +1,68 @@
-const STORAGE_KEY = "PM";
+import { openDB } from "idb";
 
-// Save array to localStorage
-export function save(data: Record<string, any>[]): void {
-  try {
-    const jsonString = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, jsonString);
-  } catch (error) {
-    console.error("Failed to save to localStorage:", error);
+const DB_NAME = "PM_DB";
+const STORE_NAME = "records";
+
+const dbPromise = openDB(DB_NAME, 1, {
+  upgrade(db) {
+    if (!db.objectStoreNames.contains(STORE_NAME)) {
+      db.createObjectStore(STORE_NAME, { keyPath: "id" });
+    }
+  },
+});
+
+// Add a new record (auto-generates UUID if none is provided)
+export async function add(record: Record<string, any>): Promise<string> {
+  const db = await dbPromise;
+
+  if (!record.id) {
+    record.id = crypto.randomUUID();
   }
+
+  await db.add(STORE_NAME, record);
+  return record.id;
 }
 
-// Load array from localStorage
-export function load(): Record<string, any>[] {
-  try {
-    const jsonString = localStorage.getItem(STORAGE_KEY);
-    if (!jsonString) return [];
-    return JSON.parse(jsonString);
-  } catch (error) {
-    console.error("Failed to load from localStorage:", error);
-    return [];
+// Load all records
+export async function load(): Promise<Record<string, any>[]> {
+  const db = await dbPromise;
+  return db.getAll(STORE_NAME);
+}
+
+// Update a record by ID (throws error if ID not found)
+export async function update(
+  id: string,
+  newData: Record<string, any>
+): Promise<void> {
+  const db = await dbPromise;
+
+  const existing = await db.get(STORE_NAME, id);
+  if (!existing) {
+    throw new Error(`Update failed: No record found with ID "${id}".`);
   }
+
+  const updatedRecord = {
+    ...existing,
+    ...newData,
+    id, // keep the original ID intact
+  };
+
+  await db.put(STORE_NAME, updatedRecord);
 }
 
-// Add a new record
-export function add(record: Record<string, any>): void {
-  const current = load();
-  current.push(record);
-  save(current);
-}
+// Remove a record by ID (throws error if ID not found)
+export async function remove(id: string): Promise<void> {
+  const db = await dbPromise;
 
-// Update a record at a specific index
-export function update(index: number, newRecord: Record<string, any>): void {
-  const current = load();
-  if (index >= 0 && index < current.length) {
-    current[index] = newRecord;
-    save(current);
-  } else {
-    console.warn("Index out of bounds in update:", index);
+  const existing = await db.get(STORE_NAME, id);
+  if (!existing) {
+    throw new Error(`Remove failed: No record found with ID "${id}".`);
   }
+
+  await db.delete(STORE_NAME, id);
 }
 
-// Remove a record at a specific index
-export function remove(index: number): void {
-  const current = load();
-  if (index >= 0 && index < current.length) {
-    current.splice(index, 1);
-    save(current);
-  } else {
-    console.warn("Index out of bounds in remove:", index);
-  }
-}
+// ONLY for development/debugging
+// if (typeof window !== "undefined") {
+//   (window as any).DB = { add, load, update, remove };
+// }
