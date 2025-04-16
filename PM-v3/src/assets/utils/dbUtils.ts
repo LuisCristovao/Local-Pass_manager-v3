@@ -63,6 +63,6 @@ export async function remove(id: string): Promise<void> {
 }
 
 // ONLY for development/debugging
-if (typeof window !== "undefined") {
-  (window as any).DB = { add, load, update, remove };
-}
+// if (typeof window !== "undefined") {
+//   (window as any).DB = { add, load, update, remove };
+// }

@@ -114,6 +114,6 @@ export async function sha256(message: string): Promise<string> {
 }
 
 //ONLY for development/debugging
-if (typeof window !== "undefined") {
-  (window as any).Crypto = { encrypt, decrypt, sha256 , canDecrypt};
-}
+// if (typeof window !== "undefined") {
+//   (window as any).Crypto = { encrypt, decrypt, sha256 , canDecrypt};
+// }

@@ -25,7 +25,7 @@ function ManagePasswords() {
     };
 
     fetchData();
-  }, []);
+  }, [state]);
 
   const pages: any = {
     intro: () => {
@@ -45,7 +45,7 @@ function ManagePasswords() {
           <h1>Manage Passwords</h1>
           <ul>
             {passwords.map((p, i) => (
-              <li key={p.id || i}>{p.name}</li>
+              <li key={p.id || i}>{p.site}</li>
             ))}
           </ul>
           <button onClick={() => setState("start")}>Go to Start</button>
@@ -60,6 +60,7 @@ function ManagePasswords() {
       </>
     ),
   };
+  
 
   return pages[state]();
 }
