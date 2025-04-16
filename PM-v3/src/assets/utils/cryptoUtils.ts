@@ -75,22 +75,35 @@ export async function encrypt(text: string, password: string): Promise<string> {
 export async function decrypt(
   encryptedBase64: string,
   password: string
-): Promise<string> {
-  const encryptedBytes = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
-  const salt = encryptedBytes.slice(0, 16);
-  const iv = encryptedBytes.slice(16, 28);
-  const data = encryptedBytes.slice(28);
+): Promise<string | null> {
+  try {
+    const encryptedBytes = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
+    const salt = encryptedBytes.slice(0, 16);
+    const iv = encryptedBytes.slice(16, 28);
+    const data = encryptedBytes.slice(28);
 
-  const key = await deriveKey(password, salt);
+    const key = await deriveKey(password, salt);
 
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    data
-  );
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      data
+    );
 
-  return uint8ToStr(new Uint8Array(decrypted));
+    return uint8ToStr(new Uint8Array(decrypted));
+  } catch {
+    return null;
+  }
 }
+
+export async function canDecrypt(
+  encryptedBase64: string,
+  password: string
+): Promise<boolean> {
+  const result = await decrypt(encryptedBase64, password);
+  return result !== null;
+}
+
 
 // --- SHA-256 Hash ---
 export async function sha256(message: string): Promise<string> {
@@ -101,6 +114,6 @@ export async function sha256(message: string): Promise<string> {
 }
 
 //ONLY for development/debugging
-// if (typeof window !== "undefined") {
-//   (window as any).EN = { encrypt, decrypt, sha256 };
-// }
+if (typeof window !== "undefined") {
+  (window as any).Crypto = { encrypt, decrypt, sha256 , canDecrypt};
+}
