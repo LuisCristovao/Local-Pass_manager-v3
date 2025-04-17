@@ -170,6 +170,7 @@ function ManagePasswords() {
               <div className="list-element" key={p.id}>
                 <p className="site" style={{textAlign:"center"}}><b>{p.site}</b></p>
                 <p className="comments">{p.comments}</p>
+                <button onClick={()=>{}}>Open</button>
               </div>
             ))}
           </div>
