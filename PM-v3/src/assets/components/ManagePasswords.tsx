@@ -155,9 +155,10 @@ function ManagePasswords() {
             Go back
           </button>
           <h1>Manage Passwords</h1>
+          <input type="text" placeholder="Search"/> 
           <div>
             <button
-              style={{ marginBottom: "10px" }}
+              style={{ marginBottom: "30px" }}
               onClick={() => setState("record")}
             >
               Add record
