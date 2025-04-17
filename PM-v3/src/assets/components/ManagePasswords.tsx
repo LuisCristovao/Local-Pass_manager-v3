@@ -179,24 +179,49 @@ function ManagePasswords() {
     },
     record: () => {
       return (
-        <>
-          <div>
-            <p>Site</p>
-            <input id="site_input" />
-
-            <p>User</p>
-            <input id="user_input" />
-
-            <p>Pass</p>
-            <input id="pass_input" />
-
-            <p>Comments</p>
-            <textarea id="comments_input"></textarea>
-
-            <button onClick={handleSubmit}>Submit</button>
+        <div className="details-container">
+          <button className="back-button">&lt;</button>
+      
+          <div className="entry-box">
+            <input
+              className="site-input"
+              type="text"
+              placeholder="site/page ..."
+              id="site_input"
+            />
+      
+            <textarea
+              className="description-text"
+              placeholder="Description ..."
+              id="comments_input"
+            />
+      
+            <div className="action-row">
+              <button className="btn">Copy Username</button>
+              <input
+                className="small-input"
+                placeholder="username"
+                id="user_input"
+              />
+            </div>
+      
+            <div className="action-row">
+              <button className="btn">Copy Password</button>
+              <input
+                className="small-input"
+                placeholder="password"
+                id="pass_input"
+              />
+            </div>
+      
+            <div className="edit-buttons">
+              <button className="btn small" onClick={handleSubmit}>Submit</button>
+              <button className="btn small delete">Delete</button>
+            </div>
           </div>
-        </>
+        </div>
       );
+      
     },
   };
 
