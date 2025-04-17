@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
+import "../css/ManagePasswords.css";
+import { useNavigate } from "react-router-dom"; // Add this import
 
 function ManagePasswords() {
-
   const [state, setState] = useState("intro");
   const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
   const [decryptedPasswords, setDecryptedPasswords] = useState<
@@ -12,6 +13,8 @@ function ManagePasswords() {
   const [loading, setLoading] = useState(true);
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
+
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     const site = (document.getElementById("site_input") as HTMLInputElement)
@@ -44,7 +47,7 @@ function ManagePasswords() {
 
   const decryptAllPasswords = async () => {
     const data = await DB.load(); // <-- freshly loaded passwords
-    
+
     const decrypted = await Promise.all(
       data.map(async (p) => ({
         id: p.id,
@@ -59,6 +62,9 @@ function ManagePasswords() {
 
   //decrypt passwords in manage state
   useEffect(() => {
+  
+
+  
     if (state === "intro") {
       // Load passwords on mount
       const fetchData = async () => {
@@ -70,8 +76,17 @@ function ManagePasswords() {
       fetchData();
     }
     if (state === "manage") {
+      //change root height
+      const root = document.getElementById('root');
+      if (root) root.style.minHeight = '50vh';
+
       decryptAllPasswords();
     }
+
+    return () => {
+      const root = document.getElementById('root');
+      if (root) root.style.minHeight = '70vh'; // restore default on unmount
+    };
   }, [state]);
 
   const pages: any = {
@@ -101,7 +116,7 @@ function ManagePasswords() {
         <>
           <h1>Insert Master Password</h1>
           <input
-          type="password"
+            type="password"
             onKeyDown={async (e) => {
               if (e.key === "Enter") {
                 const target = e.target as HTMLInputElement;
@@ -133,14 +148,29 @@ function ManagePasswords() {
     manage: () => {
       return (
         <>
+          <button
+            style={{ position: "fixed", top: "10px", left: "10px" }}
+            onClick={() => navigate("/")}
+          >
+            Go back
+          </button>
           <h1>Manage Passwords</h1>
-          <ul>
+          <div>
+            <button
+              style={{ marginBottom: "10px" }}
+              onClick={() => setState("record")}
+            >
+              Add record
+            </button>
+          </div>
+
+          <div className="passwords-list">
             {decryptedPasswords.map((p) => (
-              <li key={p.id}>{p.site}</li>
+              <div className="list-element" key={p.id}>
+                {p.site}
+              </div>
             ))}
-          </ul>
-          <button onClick={() => setState("record")}>Add record</button>
-          <button onClick={() => setState("intro")}>Go to Start</button>
+          </div>
         </>
       );
     },
