@@ -149,7 +149,7 @@ function ManagePasswords() {
       return (
         <>
           <button
-            style={{ position: "fixed", top: "10px", left: "10px" }}
+            style={{ position: "absolute", top: "10px", left: "10px" }}
             onClick={() => navigate("/")}
           >
             Go back
@@ -168,7 +168,8 @@ function ManagePasswords() {
           <div className="passwords-list">
             {decryptedPasswords.map((p) => (
               <div className="list-element" key={p.id}>
-                {p.site}
+                <p className="site" style={{textAlign:"center"}}><b>{p.site}</b></p>
+                <p className="comments">{p.comments}</p>
               </div>
             ))}
           </div>
