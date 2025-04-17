@@ -1,7 +1,7 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
 import "./App.css";
-import ManagePasswords from "./assets/components/ManagePasswords";
+// import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
   const navigate = useNavigate();

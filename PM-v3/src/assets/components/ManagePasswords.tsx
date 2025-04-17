@@ -3,6 +3,7 @@ import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 
 function ManagePasswords() {
+
   const [state, setState] = useState("intro");
   const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
   const [decryptedPasswords, setDecryptedPasswords] = useState<
@@ -44,7 +45,6 @@ function ManagePasswords() {
   const decryptAllPasswords = async () => {
     const data = await DB.load(); // <-- freshly loaded passwords
     
-
     const decrypted = await Promise.all(
       data.map(async (p) => ({
         id: p.id,
@@ -135,7 +135,7 @@ function ManagePasswords() {
         <>
           <h1>Manage Passwords</h1>
           <ul>
-            {decryptedPasswords.map((p, i) => (
+            {decryptedPasswords.map((p) => (
               <li key={p.id}>{p.site}</li>
             ))}
           </ul>
