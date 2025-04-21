@@ -4,7 +4,6 @@ import * as Crypto from "../utils/cryptoUtils";
 import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
 
-
 const copyInputValue = async (inputId: string) => {
   const input = document.getElementById(inputId) as HTMLInputElement | null;
   if (input) {
@@ -28,7 +27,8 @@ function ManagePasswords() {
   const [loading, setLoading] = useState(true);
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
-  
+  const [copyUserText, setCopyUserText] = useState("Copy Username");
+  const [copyPassText, setCopyPassText] = useState("Copy Password");
 
   const navigate = useNavigate();
 
@@ -217,9 +217,17 @@ function ManagePasswords() {
             />
 
             <div className="action-row">
-              <button className="btn" onClick={()=>{copyInputValue("user_input")}}>Copy Username</button>
+              <button
+                className="btn"
+                onClick={(e) => {
+                  copyInputValue("user_input");
+                  setCopyUserText("Copied!");
+                  setTimeout(() => setCopyUserText("Copy Username"), 1000);
+                }}
+              >
+                {copyUserText}
+              </button>
               <input
-                
                 className="small-input"
                 placeholder="username"
                 id="user_input"
@@ -227,9 +235,17 @@ function ManagePasswords() {
             </div>
 
             <div className="action-row">
-              <button className="btn" onClick={()=>{copyInputValue("pass_input")}}>Copy Password</button>
+              <button
+                className="btn"
+                onClick={() => {
+                  copyInputValue("pass_input");
+                  setCopyPassText("Copied!");
+                  setTimeout(() => setCopyPassText("Copy Password"), 1000);
+                }}
+              >
+                {copyPassText}
+              </button>
               <input
-                
                 className="small-input"
                 placeholder="password"
                 id="pass_input"
