@@ -4,20 +4,6 @@ import * as Crypto from "../utils/cryptoUtils";
 import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
 
-const copyInputValue = async (inputId: string) => {
-  const input = document.getElementById(inputId) as HTMLInputElement | null;
-  if (input) {
-    try {
-      await navigator.clipboard.writeText(input.value);
-      console.log(`Value from ${inputId} copied to clipboard`);
-    } catch (err) {
-      console.error(`Failed to copy from ${inputId}: `, err);
-    }
-  } else {
-    console.error(`Input element with ID ${inputId} not found`);
-  }
-};
-
 function ManagePasswords() {
   const [state, setState] = useState("intro");
   const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
@@ -29,8 +15,23 @@ function ManagePasswords() {
   const userPassRef = useRef<string>(""); // default value is an empty string
   const [copyUserText, setCopyUserText] = useState("Copy Username");
   const [copyPassText, setCopyPassText] = useState("Copy Password");
+  const [editRecordId, setEditRecordId] = useState("");
 
   const navigate = useNavigate();
+
+  const copyInputValue = async (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement | null;
+    if (input) {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        console.log(`Value from ${inputId} copied to clipboard`);
+      } catch (err) {
+        console.error(`Failed to copy from ${inputId}: `, err);
+      }
+    } else {
+      console.error(`Input element with ID ${inputId} not found`);
+    }
+  };
 
   const handleSubmit = async () => {
     const site = (document.getElementById("site_input") as HTMLInputElement)
@@ -187,7 +188,10 @@ function ManagePasswords() {
                 <p className="comments">{p.comments}</p>
                 <button
                   style={{ margin: "0 auto", marginTop: "10px" }}
-                  onClick={() => {}}
+                  onClick={() => {
+                    setEditRecordId(p.id)
+                    setState("edit_record")
+                  }}
                 >
                   Open
                 </button>
@@ -200,7 +204,14 @@ function ManagePasswords() {
     record: () => {
       return (
         <div className="details-container">
-          <button className="back-button">&lt;</button>
+          <button
+            className="back-button"
+            onClick={() => {
+              setState("manage");
+            }}
+          >
+            &lt;
+          </button>
 
           <div className="entry-box">
             <input
@@ -219,7 +230,7 @@ function ManagePasswords() {
             <div className="action-row">
               <button
                 className="btn"
-                onClick={(e) => {
+                onClick={() => {
                   copyInputValue("user_input");
                   setCopyUserText("Copied!");
                   setTimeout(() => setCopyUserText("Copy Username"), 1000);
@@ -249,6 +260,84 @@ function ManagePasswords() {
                 className="small-input"
                 placeholder="password"
                 id="pass_input"
+              />
+            </div>
+
+            <div className="edit-buttons">
+              <button className="btn small" onClick={handleSubmit}>
+                Submit
+              </button>
+              <button className="btn small delete">Delete</button>
+            </div>
+          </div>
+        </div>
+      );
+    },
+    edit_record: () => {
+      const data=decryptedPasswords.filter(el=>{return el.id===editRecordId})[0]
+      //console.log(data)
+      return (
+        <div className="details-container">
+          <button
+            className="back-button"
+            onClick={() => {
+              setState("manage");
+            }}
+          >
+            &lt;
+          </button>
+
+          <div className="entry-box">
+            <input
+              className="site-input"
+              type="text"
+              placeholder="site/page ..."
+              id="site_input"
+              value={data.site}
+            />
+
+            <textarea
+              className="description-text"
+              placeholder="Description ..."
+              id="comments_input"
+              value={data.comments}
+            />
+
+            <div className="action-row">
+              <button
+                className="btn"
+                onClick={() => {
+                  copyInputValue("user_input");
+                  setCopyUserText("Copied!");
+                  setTimeout(() => setCopyUserText("Copy Username"), 1000);
+                }}
+              >
+                {copyUserText}
+              </button>
+              <input
+                className="small-input"
+                placeholder="username"
+                id="user_input"
+                value={data.user}
+              />
+            </div>
+
+            <div className="action-row">
+              <button
+                className="btn"
+                onClick={() => {
+                  copyInputValue("pass_input");
+                  setCopyPassText("Copied!");
+                  setTimeout(() => setCopyPassText("Copy Password"), 1000);
+                }}
+              >
+                {copyPassText}
+              </button>
+              <input
+                className="small-input"
+                placeholder="password"
+                id="pass_input"
+                value={data.pass}
               />
             </div>
 
