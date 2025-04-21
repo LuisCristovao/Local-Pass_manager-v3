@@ -4,6 +4,21 @@ import * as Crypto from "../utils/cryptoUtils";
 import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
 
+
+const copyInputValue = async (inputId: string) => {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  if (input) {
+    try {
+      await navigator.clipboard.writeText(input.value);
+      console.log(`Value from ${inputId} copied to clipboard`);
+    } catch (err) {
+      console.error(`Failed to copy from ${inputId}: `, err);
+    }
+  } else {
+    console.error(`Input element with ID ${inputId} not found`);
+  }
+};
+
 function ManagePasswords() {
   const [state, setState] = useState("intro");
   const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
@@ -13,6 +28,7 @@ function ManagePasswords() {
   const [loading, setLoading] = useState(true);
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
+  
 
   const navigate = useNavigate();
 
@@ -62,9 +78,6 @@ function ManagePasswords() {
 
   //decrypt passwords in manage state
   useEffect(() => {
-  
-
-  
     if (state === "intro") {
       // Load passwords on mount
       const fetchData = async () => {
@@ -77,15 +90,15 @@ function ManagePasswords() {
     }
     if (state === "manage") {
       //change root height
-      const root = document.getElementById('root');
-      if (root) root.style.minHeight = '50vh';
+      const root = document.getElementById("root");
+      if (root) root.style.minHeight = "50vh";
 
       decryptAllPasswords();
     }
 
     return () => {
-      const root = document.getElementById('root');
-      if (root) root.style.minHeight = '70vh'; // restore default on unmount
+      const root = document.getElementById("root");
+      if (root) root.style.minHeight = "70vh"; // restore default on unmount
     };
   }, [state]);
 
@@ -155,7 +168,7 @@ function ManagePasswords() {
             Go back
           </button>
           <h1>Manage Passwords</h1>
-          <input type="text" placeholder="Search"/> 
+          <input type="text" placeholder="Search" />
           <div>
             <button
               style={{ marginBottom: "30px" }}
@@ -168,9 +181,16 @@ function ManagePasswords() {
           <div className="passwords-list">
             {decryptedPasswords.map((p) => (
               <div className="list-element" key={p.id}>
-                <p className="site" style={{textAlign:"center"}}><b>{p.site}</b></p>
+                <p className="site" style={{ textAlign: "center" }}>
+                  <b>{p.site}</b>
+                </p>
                 <p className="comments">{p.comments}</p>
-                <button onClick={()=>{}}>Open</button>
+                <button
+                  style={{ margin: "0 auto", marginTop: "10px" }}
+                  onClick={() => {}}
+                >
+                  Open
+                </button>
               </div>
             ))}
           </div>
@@ -181,7 +201,7 @@ function ManagePasswords() {
       return (
         <div className="details-container">
           <button className="back-button">&lt;</button>
-      
+
           <div className="entry-box">
             <input
               className="site-input"
@@ -189,39 +209,42 @@ function ManagePasswords() {
               placeholder="site/page ..."
               id="site_input"
             />
-      
+
             <textarea
               className="description-text"
               placeholder="Description ..."
               id="comments_input"
             />
-      
+
             <div className="action-row">
-              <button className="btn">Copy Username</button>
+              <button className="btn" onClick={()=>{copyInputValue("user_input")}}>Copy Username</button>
               <input
+                
                 className="small-input"
                 placeholder="username"
                 id="user_input"
               />
             </div>
-      
+
             <div className="action-row">
-              <button className="btn">Copy Password</button>
+              <button className="btn" onClick={()=>{copyInputValue("pass_input")}}>Copy Password</button>
               <input
+                
                 className="small-input"
                 placeholder="password"
                 id="pass_input"
               />
             </div>
-      
+
             <div className="edit-buttons">
-              <button className="btn small" onClick={handleSubmit}>Submit</button>
+              <button className="btn small" onClick={handleSubmit}>
+                Submit
+              </button>
               <button className="btn small delete">Delete</button>
             </div>
           </div>
         </div>
       );
-      
     },
   };
 
