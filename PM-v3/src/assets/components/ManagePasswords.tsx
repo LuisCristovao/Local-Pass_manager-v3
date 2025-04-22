@@ -3,6 +3,7 @@ import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
+import * as Search from "../utils/searchUtils"
 
 function ManagePasswords() {
   const [state, setState] = useState("intro");
