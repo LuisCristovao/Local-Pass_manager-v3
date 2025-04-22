@@ -33,7 +33,7 @@ function ManagePasswords() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (id: string = "") => {
     const site = (document.getElementById("site_input") as HTMLInputElement)
       .value;
     const user = (document.getElementById("user_input") as HTMLInputElement)
@@ -58,8 +58,27 @@ function ManagePasswords() {
     };
 
     // You could now store input_data into IndexedDB, etc.
-    await DB.add(input_data);
+    if (id === "") {
+      await DB.add(input_data);
+    } else {
+      await DB.update(id, input_data);
+    }
+
     setState("manage");
+  };
+
+  const handleDelete = async (id: string = "") => {
+    // Basic confirm dialog
+    let result = confirm("Are you sure you want to delete this record?");
+
+    // Handling the response
+    if (result) {// delete
+      await DB.remove(id);
+      setState("manage")
+    } else{
+      
+    }
+    
   };
 
   const decryptAllPasswords = async () => {
@@ -189,8 +208,8 @@ function ManagePasswords() {
                 <button
                   style={{ margin: "0 auto", marginTop: "10px" }}
                   onClick={() => {
-                    setEditRecordId(p.id)
-                    setState("edit_record")
+                    setEditRecordId(p.id);
+                    setState("edit_record");
                   }}
                 >
                   Open
@@ -264,17 +283,24 @@ function ManagePasswords() {
             </div>
 
             <div className="edit-buttons">
-              <button className="btn small" onClick={handleSubmit}>
+              <button
+                className="btn small"
+                onClick={() => {
+                  handleSubmit();
+                }}
+              >
                 Submit
               </button>
-              <button className="btn small delete">Delete</button>
+             
             </div>
           </div>
         </div>
       );
     },
     edit_record: () => {
-      const data=decryptedPasswords.filter(el=>{return el.id===editRecordId})[0]
+      const data = decryptedPasswords.filter((el) => {
+        return el.id === editRecordId;
+      })[0];
       //console.log(data)
       return (
         <div className="details-container">
@@ -293,14 +319,14 @@ function ManagePasswords() {
               type="text"
               placeholder="site/page ..."
               id="site_input"
-              value={data.site}
+              defaultValue={data.site}
             />
 
             <textarea
               className="description-text"
               placeholder="Description ..."
               id="comments_input"
-              value={data.comments}
+              defaultValue={data.comments}
             />
 
             <div className="action-row">
@@ -318,7 +344,7 @@ function ManagePasswords() {
                 className="small-input"
                 placeholder="username"
                 id="user_input"
-                value={data.user}
+                defaultValue={data.user}
               />
             </div>
 
@@ -337,15 +363,20 @@ function ManagePasswords() {
                 className="small-input"
                 placeholder="password"
                 id="pass_input"
-                value={data.pass}
+                defaultValue={data.pass}
               />
             </div>
 
             <div className="edit-buttons">
-              <button className="btn small" onClick={handleSubmit}>
+              <button
+                className="btn small"
+                onClick={() => {
+                  handleSubmit(editRecordId);
+                }}
+              >
                 Submit
               </button>
-              <button className="btn small delete">Delete</button>
+              <button className="btn small delete" onClick={()=>{handleDelete(editRecordId)}}>Delete</button>
             </div>
           </div>
         </div>
