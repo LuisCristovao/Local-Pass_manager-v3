@@ -1,16 +1,28 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef,RefObject } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 
-function PassRecord(
-  edit: boolean,
-  storedPasswords: any,
-  setDecryptedPasswords: any,
-  userPassRef: any,
-  setState: any,
-  editRecordId: any,
-  decryptedPasswords: any
-) {
+// Define the props interface
+interface PassRecordProps {
+    edit: boolean;
+    storedPasswords: RefObject<Record<string, any>[]>; // Replace `any` with a specific type if possible
+    setDecryptedPasswords: any; // Replace `any` with specific type
+    userPassRef: React.RefObject<string>; // Adjust based on the ref's type
+    setState: React.Dispatch<React.SetStateAction<string>>; // ✅ typed! // Replace `any` with specific state type
+    editRecordId: string | undefined; // Adjust based on actual type
+    decryptedPasswords: any[]; // Replace `any` with specific type
+  }
+  
+  // Define the component with React.FC and the props interface
+  const PassRecord: React.FC<PassRecordProps> = ({
+  edit,
+  storedPasswords,
+  setDecryptedPasswords,
+  userPassRef,
+  setState,
+  editRecordId,
+  decryptedPasswords
+})=> {
   const [copyUserText, setCopyUserText] = useState("Copy Username");
   const [copyPassText, setCopyPassText] = useState("Copy Password");
   const copyInputValue = async (inputId: string) => {

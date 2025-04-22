@@ -95,7 +95,7 @@ function ManagePasswords() {
         comments: await Crypto.decrypt(p.comments, userPassRef.current),
       }))
     );
-    storedPasswords.current=decrypted
+    storedPasswords.current = decrypted;
     setDecryptedPasswords(decrypted);
   };
 
@@ -128,29 +128,26 @@ function ManagePasswords() {
   //reset to intro statge after 10 min of no input from user
   useEffect(() => {
     if (state !== "manage") return;
-  
+
     let timeout: number;
-  
+
     const resetTimer = () => {
       clearTimeout(timeout);
       timeout = window.setTimeout(() => {
         setState("intro"); // auto-reset after 10 mins of inactivity
       }, 10 * 60 * 1000);
     };
-  
+
     const events = ["mousemove", "keydown", "mousedown", "touchstart"];
-    events.forEach(event => window.addEventListener(event, resetTimer));
-  
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+
     resetTimer(); // start the initial timer
-  
+
     return () => {
       clearTimeout(timeout);
-      events.forEach(event => window.removeEventListener(event, resetTimer));
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
   }, [state]);
-  
-  
-  
 
   const pages: any = {
     intro: () => {
@@ -218,20 +215,26 @@ function ManagePasswords() {
             Go back
           </button>
           <h1>Manage Passwords</h1>
-          <input type="text" placeholder="Search" 
-          onInput={(e)=>{
-          
-            const target = e.target as HTMLInputElement;
-            const search_text = target.value;
-            if(search_text!==""){
-              const found_indexes=Search.findBestMatchs(storedPasswords.current,search_text)
-              const filtered = found_indexes.map(i => storedPasswords.current[i]);
-              setDecryptedPasswords(filtered)
-            }else{
-              setDecryptedPasswords(storedPasswords.current)
-            }
-            
-          }}/>
+          <input
+            type="text"
+            placeholder="Search"
+            onInput={(e) => {
+              const target = e.target as HTMLInputElement;
+              const search_text = target.value;
+              if (search_text !== "") {
+                const found_indexes = Search.findBestMatchs(
+                  storedPasswords.current,
+                  search_text
+                );
+                const filtered = found_indexes.map(
+                  (i) => storedPasswords.current[i]
+                );
+                setDecryptedPasswords(filtered);
+              } else {
+                setDecryptedPasswords(storedPasswords.current);
+              }
+            }}
+          />
           <div>
             <button
               style={{ marginBottom: "30px" }}
@@ -265,184 +268,38 @@ function ManagePasswords() {
     },
     record: () => {
       return (
-        <div className="details-container">
-          <button
-            className="back-button"
-            onClick={() => {
-              setState("manage");
-            }}
-          >
-            &lt;
-          </button>
-
-          <div className="entry-box">
-            <input
-              className="site-input"
-              type="text"
-              placeholder="site/page ..."
-              id="site_input"
-            />
-
-            <textarea
-              className="description-text"
-              placeholder="Description ..."
-              id="comments_input"
-            />
-
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("user_input");
-                  setCopyUserText("Copied!");
-                  setTimeout(() => setCopyUserText("Copy Username"), 1000);
-                }}
-              >
-                {copyUserText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="username"
-                id="user_input"
-              />
-            </div>
-
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("pass_input");
-                  setCopyPassText("Copied!");
-                  setTimeout(() => setCopyPassText("Copy Password"), 1000);
-                }}
-              >
-                {copyPassText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="password"
-                id="pass_input"
-              />
-            </div>
-
-            <div className="edit-buttons">
-              <button
-                className="btn small"
-                onClick={() => {
-                  handleSubmit();
-                }}
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-        </div>
+        <PassRecord
+          edit={false}
+          storedPasswords={storedPasswords}
+          setDecryptedPasswords={setDecryptedPasswords}
+          userPassRef={userPassRef}
+          setState={setState}
+          editRecordId={editRecordId}
+          decryptedPasswords={decryptedPasswords}
+        />
       );
     },
     edit_record: () => {
-      const data = decryptedPasswords.filter((el) => {
-        return el.id === editRecordId;
-      })[0];
-      //console.log(data)
       return (
-        <div className="details-container">
-          <button
-            className="back-button"
-            onClick={() => {
-              setState("manage");
-            }}
-          >
-            &lt;
-          </button>
-
-          <div className="entry-box">
-            <input
-              className="site-input"
-              type="text"
-              placeholder="site/page ..."
-              id="site_input"
-              defaultValue={data.site}
-            />
-
-            <textarea
-              className="description-text"
-              placeholder="Description ..."
-              id="comments_input"
-              defaultValue={data.comments}
-            />
-
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("user_input");
-                  setCopyUserText("Copied!");
-                  setTimeout(() => setCopyUserText("Copy Username"), 1000);
-                }}
-              >
-                {copyUserText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="username"
-                id="user_input"
-                defaultValue={data.user}
-              />
-            </div>
-
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("pass_input");
-                  setCopyPassText("Copied!");
-                  setTimeout(() => setCopyPassText("Copy Password"), 1000);
-                }}
-              >
-                {copyPassText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="password"
-                id="pass_input"
-                defaultValue={data.pass}
-              />
-            </div>
-
-            <div className="edit-buttons">
-              <button
-                className="btn small"
-                onClick={() => {
-                  handleSubmit(editRecordId);
-                }}
-              >
-                Submit
-              </button>
-              <button
-                className="btn small delete"
-                onClick={() => {
-                  handleDelete(editRecordId);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <PassRecord
+          edit={true}
+          storedPasswords={storedPasswords}
+          setDecryptedPasswords={setDecryptedPasswords}
+          userPassRef={userPassRef}
+          setState={setState}
+          editRecordId={editRecordId}
+          decryptedPasswords={decryptedPasswords}
+        />
       );
     },
   };
-  
+
   //ONLY for development/debugging
   // if (typeof window !== "undefined") {
   //   (window as any).PM = { decryptedPasswords, Search };
   // }
 
-
-
   return pages[state]();
-
-  
 }
 
 export default ManagePasswords;
