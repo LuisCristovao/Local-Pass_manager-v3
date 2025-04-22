@@ -76,7 +76,7 @@ function ManagePasswords() {
       await DB.remove(id);
       setState("manage")
     } else{
-      
+
     }
     
   };
@@ -288,6 +288,7 @@ function ManagePasswords() {
                 onClick={() => {
                   handleSubmit();
                 }}
+               
               >
                 Submit
               </button>
