@@ -3,7 +3,7 @@ import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
-import * as Search from "../utils/searchUtils"
+import * as Search from "../utils/searchUtils";
 
 function ManagePasswords() {
   const [state, setState] = useState("intro");
@@ -73,13 +73,12 @@ function ManagePasswords() {
     let result = confirm("Are you sure you want to delete this record?");
 
     // Handling the response
-    if (result) {// delete
+    if (result) {
+      // delete
       await DB.remove(id);
-      setState("manage")
-    } else{
-
+      setState("manage");
+    } else {
     }
-    
   };
 
   const decryptAllPasswords = async () => {
@@ -122,6 +121,9 @@ function ManagePasswords() {
       if (root) root.style.minHeight = "70vh"; // restore default on unmount
     };
   }, [state]);
+
+
+  
 
   const pages: any = {
     intro: () => {
@@ -289,11 +291,9 @@ function ManagePasswords() {
                 onClick={() => {
                   handleSubmit();
                 }}
-               
               >
                 Submit
               </button>
-             
             </div>
           </div>
         </div>
@@ -378,15 +378,31 @@ function ManagePasswords() {
               >
                 Submit
               </button>
-              <button className="btn small delete" onClick={()=>{handleDelete(editRecordId)}}>Delete</button>
+              <button
+                className="btn small delete"
+                onClick={() => {
+                  handleDelete(editRecordId);
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
       );
     },
   };
+  
+  //ONLY for development/debugging
+  // if (typeof window !== "undefined") {
+  //   (window as any).PM = { decryptedPasswords, Search };
+  // }
+
+
 
   return pages[state]();
+
+  
 }
 
 export default ManagePasswords;

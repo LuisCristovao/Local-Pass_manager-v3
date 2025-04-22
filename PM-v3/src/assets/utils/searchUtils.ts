@@ -31,11 +31,11 @@ export function findBestMatchs(db:any,search_word:string){
                 })
             })
             
-            let desc_array=el.description.split(" ")//aggregate similar description words
-            desc_array.forEach((description:string)=>{
+            let desc_array=el.comments.split(" ")//aggregate similar comments words
+            desc_array.forEach((comments:string)=>{
                 search_words_array.forEach(search_word_el=>{
 
-                    let similarity=supercompare(search_word_el.toLocaleLowerCase(),description.toLocaleLowerCase())
+                    let similarity=supercompare(search_word_el.toLocaleLowerCase(),comments.toLocaleLowerCase())
                     if(similarity>=similarity_index){
                         row_similarity_index+=similarity
                         number_of_words_selected++
