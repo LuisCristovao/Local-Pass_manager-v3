@@ -14,6 +14,7 @@ function ManagePasswords() {
   const [loading, setLoading] = useState(true);
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
+  const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
   const [copyUserText, setCopyUserText] = useState("Copy Username");
   const [copyPassText, setCopyPassText] = useState("Copy Password");
   const [editRecordId, setEditRecordId] = useState("");
@@ -93,6 +94,7 @@ function ManagePasswords() {
         comments: await Crypto.decrypt(p.comments, userPassRef.current),
       }))
     );
+    storedPasswords.current=decrypted
     setDecryptedPasswords(decrypted);
   };
 
@@ -191,7 +193,20 @@ function ManagePasswords() {
             Go back
           </button>
           <h1>Manage Passwords</h1>
-          <input type="text" placeholder="Search" />
+          <input type="text" placeholder="Search" 
+          onInput={(e)=>{
+          
+            const target = e.target as HTMLInputElement;
+            const search_text = target.value;
+            if(search_text!==""){
+              const found_indexes=Search.findBestMatchs(storedPasswords.current,search_text)
+              const filtered = found_indexes.map(i => storedPasswords.current[i]);
+              setDecryptedPasswords(filtered)
+            }else{
+              setDecryptedPasswords(storedPasswords.current)
+            }
+            
+          }}/>
           <div>
             <button
               style={{ marginBottom: "30px" }}
