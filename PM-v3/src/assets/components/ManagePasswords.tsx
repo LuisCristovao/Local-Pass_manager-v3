@@ -124,7 +124,31 @@ function ManagePasswords() {
     };
   }, [state]);
 
-
+  //reset to intro statge after 10 min of no input from user
+  useEffect(() => {
+    if (state !== "manage") return;
+  
+    let timeout: number;
+  
+    const resetTimer = () => {
+      clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        setState("intro"); // auto-reset after 10 mins of inactivity
+      }, 10 * 60 * 1000);
+    };
+  
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+  
+    resetTimer(); // start the initial timer
+  
+    return () => {
+      clearTimeout(timeout);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [state]);
+  
+  
   
 
   const pages: any = {
