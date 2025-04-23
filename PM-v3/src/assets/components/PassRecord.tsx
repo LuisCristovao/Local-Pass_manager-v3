@@ -25,7 +25,10 @@ const PassRecord: React.FC<PassRecordProps> = ({
 }) => {
   const [copyUserText, setCopyUserText] = useState("Copy Username");
   const [copyPassText, setCopyPassText] = useState("Copy Password");
-  const [showInputEdit,setShowInputEdit] = useState(false)
+  const [submitButtonText, setSubmitButtonText] = useState("Edit");
+  const [submitButtonText2, setSubmitButtonText2] = useState("Submit");
+  const [showInputEdit, setShowInputEdit] = useState(false);
+  const [isHoverSubmitButton, setIsHoverSubmitButton] = useState(false);
 
   const copyInputValue = async (inputId: string) => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
@@ -39,6 +42,30 @@ const PassRecord: React.FC<PassRecordProps> = ({
     } else {
       console.error(`Input element with ID ${inputId} not found`);
     }
+  };
+
+  const input_styles = {
+    Edit: () => {
+      return {
+        height: `0px`,
+        margin: `0`,
+        opacity: `0`,
+      };
+    },
+    Submit: () => {
+      return {
+        height: ``,
+        margin: ``,
+        opacity: `1`,
+      };
+    },
+    "Saved!": () => {
+      return {
+        height: `0px`,
+        margin: `0`,
+        opacity: `0`,
+      };
+    },
   };
 
   const handleSubmit = async (id: string = "") => {
@@ -68,11 +95,23 @@ const PassRecord: React.FC<PassRecordProps> = ({
     // You could now store input_data into IndexedDB, etc.
     if (id === "") {
       await DB.add(input_data);
+      setSubmitButtonText2(() => {
+        setTimeout(() => {
+          setSubmitButtonText2("Submit");
+        }, 1000);
+        return "Saved!";
+      });
     } else {
       await DB.update(id, input_data);
+      setSubmitButtonText(() => {
+        setTimeout(() => {
+          setSubmitButtonText("Edit");
+        }, 1000);
+        return "Saved!";
+      });
     }
-
-    setState("manage");
+    
+    //setState("manage");
   };
 
   const handleDelete = async (id: string = "") => {
@@ -88,7 +127,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
     }
   };
 
-  function RandomPass(size:number) {
+  function RandomPass(size: number) {
     var text = "";
     var possible =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,()/%&$#@=[]{} ";
@@ -109,10 +148,12 @@ const PassRecord: React.FC<PassRecordProps> = ({
 
   //obtain data for the edit
   let data;
-  if (edit && editRecordId != undefined) {
+  if (edit && editRecordId != undefined) {// if edit record 
     data = decryptedPasswords.filter((el: any) => {
       return el.id === editRecordId;
     })[0];
+  }else{//if new record 
+    // setSubmitButtonText("Submit")
   }
 
   return edit ? (
@@ -159,7 +200,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
               placeholder="username"
               id="user_input"
               defaultValue={data.user}
-              style={{height:`${!showInputEdit?"0px":""}`,margin:`${!showInputEdit?"0":""}`,opacity:`${!showInputEdit?"0":"1"}`}}
+              style={input_styles[submitButtonText]()}
             />
           </div>
 
@@ -179,25 +220,46 @@ const PassRecord: React.FC<PassRecordProps> = ({
               placeholder="password"
               id="pass_input"
               defaultValue={data.pass}
-              onInput={(e)=>{randomPassEvent(e)}}
-              style={{height:`${!showInputEdit?"0px":""}`,margin:`${!showInputEdit?"0":""}`,opacity:`${!showInputEdit?"0":"1"}`}}
+              onInput={(e) => {
+                randomPassEvent(e);
+              }}
+              style={input_styles[submitButtonText]()}
             />
           </div>
 
           <div className="edit-buttons">
             <button
+              id="submit_button"
               className="btn small"
               onClick={() => {
-                if(!showInputEdit){
-                  setShowInputEdit(!showInputEdit)
-                }else{
+                if (submitButtonText === "Edit") {
+                  setSubmitButtonText("Submit");
+                } else if (submitButtonText === "Submit") {
                   handleSubmit(editRecordId);
-                  //setShowInputEdit(!showInputEdit)
                 }
-                
+              }}
+              onMouseEnter={() => {
+                setIsHoverSubmitButton(true);
+              }}
+              onMouseLeave={() => {
+                setIsHoverSubmitButton(false);
+              }}
+              style={{
+                color: `${
+                  submitButtonText === "Saved!"
+                    ? "green"
+                    : isHoverSubmitButton
+                    ? "black"
+                    : "white"
+                }`,
+                border: `${
+                  submitButtonText === "Saved!"
+                    ? "2px solid green"
+                    : "2px solid white"
+                }`,
               }}
             >
-              {!showInputEdit?"Edit":"Submit"}
+              {submitButtonText}
             </button>
             <button
               className="btn small delete"
@@ -270,18 +332,41 @@ const PassRecord: React.FC<PassRecordProps> = ({
               className="small-input"
               placeholder="password"
               id="pass_input"
-              onInput={(e)=>{randomPassEvent(e)}}
+              onInput={(e) => {
+                randomPassEvent(e);
+              }}
             />
           </div>
 
           <div className="edit-buttons">
             <button
+              id="submit_button"
               className="btn small"
               onClick={() => {
                 handleSubmit();
               }}
+              onMouseEnter={() => {
+                setIsHoverSubmitButton(true);
+              }}
+              onMouseLeave={() => {
+                setIsHoverSubmitButton(false);
+              }}
+              style={{
+                color: `${
+                  submitButtonText2 === "Saved!"
+                    ? "green"
+                    : isHoverSubmitButton
+                    ? "black"
+                    : "white"
+                }`,
+                border: `${
+                  submitButtonText2 === "Saved!"
+                    ? "2px solid green"
+                    : "2px solid white"
+                }`,
+              }}
             >
-              Submit
+              {submitButtonText2}
             </button>
           </div>
         </div>
