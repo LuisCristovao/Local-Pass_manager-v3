@@ -16,72 +16,10 @@ function ManagePasswords() {
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
   const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
-  const [copyUserText, setCopyUserText] = useState("Copy Username");
-  const [copyPassText, setCopyPassText] = useState("Copy Password");
+ 
   const [editRecordId, setEditRecordId] = useState("");
 
   const navigate = useNavigate();
-
-  const copyInputValue = async (inputId: string) => {
-    const input = document.getElementById(inputId) as HTMLInputElement | null;
-    if (input) {
-      try {
-        await navigator.clipboard.writeText(input.value);
-        console.log(`Value from ${inputId} copied to clipboard`);
-      } catch (err) {
-        console.error(`Failed to copy from ${inputId}: `, err);
-      }
-    } else {
-      console.error(`Input element with ID ${inputId} not found`);
-    }
-  };
-
-  const handleSubmit = async (id: string = "") => {
-    const site = (document.getElementById("site_input") as HTMLInputElement)
-      .value;
-    const user = (document.getElementById("user_input") as HTMLInputElement)
-      .value;
-    const pass = (document.getElementById("pass_input") as HTMLInputElement)
-      .value;
-    const comments = (
-      document.getElementById("comments_input") as HTMLTextAreaElement
-    ).value;
-
-    const password = userPassRef.current;
-    if (!password) {
-      alert("Password is not set.");
-      return;
-    }
-
-    const input_data = {
-      site: await Crypto.encrypt(site, password),
-      user: await Crypto.encrypt(user, password),
-      pass: await Crypto.encrypt(pass, password),
-      comments: await Crypto.encrypt(comments, password),
-    };
-
-    // You could now store input_data into IndexedDB, etc.
-    if (id === "") {
-      await DB.add(input_data);
-    } else {
-      await DB.update(id, input_data);
-    }
-
-    setState("manage");
-  };
-
-  const handleDelete = async (id: string = "") => {
-    // Basic confirm dialog
-    let result = confirm("Are you sure you want to delete this record?");
-
-    // Handling the response
-    if (result) {
-      // delete
-      await DB.remove(id);
-      setState("manage");
-    } else {
-    }
-  };
 
   const decryptAllPasswords = async () => {
     const data = await DB.load(); // <-- freshly loaded passwords

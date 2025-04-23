@@ -177,6 +177,9 @@ const PassRecord: React.FC<PassRecordProps> = ({
             placeholder="site/page ..."
             id="site_input"
             defaultValue={data.site}
+            onInput={()=>{
+              handleSubmit(editRecordId);
+            }}
           />
 
           <textarea
@@ -184,6 +187,9 @@ const PassRecord: React.FC<PassRecordProps> = ({
             placeholder="Description ..."
             id="comments_input"
             defaultValue={data.comments}
+            onInput={()=>{
+              handleSubmit(editRecordId);
+            }}
           />
 
           <div className="action-row">
