@@ -1,30 +1,32 @@
-import { useEffect, useState, useRef,RefObject } from "react";
+import { useEffect, useState, useRef, RefObject } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 
 // Define the props interface
 interface PassRecordProps {
-    edit: boolean;
-    storedPasswords: RefObject<Record<string, any>[]>; // Replace `any` with a specific type if possible
-    setDecryptedPasswords: any; // Replace `any` with specific type
-    userPassRef: React.RefObject<string>; // Adjust based on the ref's type
-    setState: React.Dispatch<React.SetStateAction<string>>; // ✅ typed! // Replace `any` with specific state type
-    editRecordId: string | undefined; // Adjust based on actual type
-    decryptedPasswords: any[]; // Replace `any` with specific type
-  }
-  
-  // Define the component with React.FC and the props interface
-  const PassRecord: React.FC<PassRecordProps> = ({
+  edit: boolean;
+  storedPasswords: any[]; // Replace `any` with a specific type if possible
+  setDecryptedPasswords: any; // Replace `any` with specific type
+  userPassRef: React.RefObject<string>; // Adjust based on the ref's type
+  setState: React.Dispatch<React.SetStateAction<string>>; // ✅ typed! // Replace `any` with specific state type
+  editRecordId: string | undefined; // Adjust based on actual type
+  decryptedPasswords: any[]; // Replace `any` with specific type
+}
+
+// Define the component with React.FC and the props interface
+const PassRecord: React.FC<PassRecordProps> = ({
   edit,
   storedPasswords,
   setDecryptedPasswords,
   userPassRef,
   setState,
   editRecordId,
-  decryptedPasswords
-})=> {
+  decryptedPasswords,
+}) => {
   const [copyUserText, setCopyUserText] = useState("Copy Username");
   const [copyPassText, setCopyPassText] = useState("Copy Password");
+  const [showInputEdit,setShowInputEdit] = useState(false)
+
   const copyInputValue = async (inputId: string) => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
     if (input) {
@@ -86,24 +88,32 @@ interface PassRecordProps {
     }
   };
 
-  const decryptAllPasswords = async () => {
-    const data = await DB.load(); // <-- freshly loaded passwords
+  function RandomPass(size:number) {
+    var text = "";
+    var possible =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,()/%&$#@=[]{} ";
 
-    const decrypted = await Promise.all(
-      data.map(async (p) => ({
-        id: p.id,
-        site: await Crypto.decrypt(p.site, userPassRef.current),
-        user: await Crypto.decrypt(p.user, userPassRef.current),
-        pass: await Crypto.decrypt(p.pass, userPassRef.current),
-        comments: await Crypto.decrypt(p.comments, userPassRef.current),
-      }))
-    );
-    storedPasswords.current = decrypted;
-    setDecryptedPasswords(decrypted);
-  };
-  const data = decryptedPasswords.filter((el:any) => {
-    return el.id === editRecordId;
-  })[0];
+    for (var i = 0; i < size; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+
+    return text;
+  }
+
+  function randomPassEvent(input: any) {
+    if (input.target.value.search(/random\([0-9]+\)/i) != -1) {
+      let length = parseInt(input.target.value.replace(/\D/g, ""));
+      input.target.value = RandomPass(length);
+    }
+  }
+
+  //obtain data for the edit
+  let data;
+  if (edit && editRecordId != undefined) {
+    data = decryptedPasswords.filter((el: any) => {
+      return el.id === editRecordId;
+    })[0];
+  }
 
   return edit ? (
     <>
@@ -149,6 +159,7 @@ interface PassRecordProps {
               placeholder="username"
               id="user_input"
               defaultValue={data.user}
+              style={{height:`${!showInputEdit?"0px":""}`,margin:`${!showInputEdit?"0":""}`,opacity:`${!showInputEdit?"0":"1"}`}}
             />
           </div>
 
@@ -168,6 +179,8 @@ interface PassRecordProps {
               placeholder="password"
               id="pass_input"
               defaultValue={data.pass}
+              onInput={(e)=>{randomPassEvent(e)}}
+              style={{height:`${!showInputEdit?"0px":""}`,margin:`${!showInputEdit?"0":""}`,opacity:`${!showInputEdit?"0":"1"}`}}
             />
           </div>
 
@@ -175,10 +188,16 @@ interface PassRecordProps {
             <button
               className="btn small"
               onClick={() => {
-                handleSubmit(editRecordId);
+                if(!showInputEdit){
+                  setShowInputEdit(!showInputEdit)
+                }else{
+                  handleSubmit(editRecordId);
+                  //setShowInputEdit(!showInputEdit)
+                }
+                
               }}
             >
-              Submit
+              {!showInputEdit?"Edit":"Submit"}
             </button>
             <button
               className="btn small delete"
@@ -194,80 +213,81 @@ interface PassRecordProps {
     </>
   ) : (
     <>
-    <div className="details-container">
-          <button
-            className="back-button"
-            onClick={() => {
-              setState("manage");
-            }}
-          >
-            &lt;
-          </button>
+      <div className="details-container">
+        <button
+          className="back-button"
+          onClick={() => {
+            setState("manage");
+          }}
+        >
+          &lt;
+        </button>
 
-          <div className="entry-box">
+        <div className="entry-box">
+          <input
+            className="site-input"
+            type="text"
+            placeholder="site/page ..."
+            id="site_input"
+          />
+
+          <textarea
+            className="description-text"
+            placeholder="Description ..."
+            id="comments_input"
+          />
+
+          <div className="action-row">
+            <button
+              className="btn"
+              onClick={() => {
+                copyInputValue("user_input");
+                setCopyUserText("Copied!");
+                setTimeout(() => setCopyUserText("Copy Username"), 1000);
+              }}
+            >
+              {copyUserText}
+            </button>
             <input
-              className="site-input"
-              type="text"
-              placeholder="site/page ..."
-              id="site_input"
+              className="small-input"
+              placeholder="username"
+              id="user_input"
             />
+          </div>
 
-            <textarea
-              className="description-text"
-              placeholder="Description ..."
-              id="comments_input"
+          <div className="action-row">
+            <button
+              className="btn"
+              onClick={() => {
+                copyInputValue("pass_input");
+                setCopyPassText("Copied!");
+                setTimeout(() => setCopyPassText("Copy Password"), 1000);
+              }}
+            >
+              {copyPassText}
+            </button>
+            <input
+              className="small-input"
+              placeholder="password"
+              id="pass_input"
+              onInput={(e)=>{randomPassEvent(e)}}
             />
+          </div>
 
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("user_input");
-                  setCopyUserText("Copied!");
-                  setTimeout(() => setCopyUserText("Copy Username"), 1000);
-                }}
-              >
-                {copyUserText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="username"
-                id="user_input"
-              />
-            </div>
-
-            <div className="action-row">
-              <button
-                className="btn"
-                onClick={() => {
-                  copyInputValue("pass_input");
-                  setCopyPassText("Copied!");
-                  setTimeout(() => setCopyPassText("Copy Password"), 1000);
-                }}
-              >
-                {copyPassText}
-              </button>
-              <input
-                className="small-input"
-                placeholder="password"
-                id="pass_input"
-              />
-            </div>
-
-            <div className="edit-buttons">
-              <button
-                className="btn small"
-                onClick={() => {
-                  handleSubmit();
-                }}
-              >
-                Submit
-              </button>
-            </div>
+          <div className="edit-buttons">
+            <button
+              className="btn small"
+              onClick={() => {
+                handleSubmit();
+              }}
+            >
+              Submit
+            </button>
           </div>
         </div>
+      </div>
     </>
   );
-}
+};
 
 export default PassRecord;
