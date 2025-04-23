@@ -229,8 +229,6 @@ function ManagePasswords() {
       return (
         <PassRecord
           edit={false}
-          storedPasswords={storedPasswords}
-          setDecryptedPasswords={setDecryptedPasswords}
           userPassRef={userPassRef}
           setState={setState}
           editRecordId={editRecordId}
@@ -242,8 +240,6 @@ function ManagePasswords() {
       return (
         <PassRecord
           edit={true}
-          storedPasswords={storedPasswords}
-          setDecryptedPasswords={setDecryptedPasswords}
           userPassRef={userPassRef}
           setState={setState}
           editRecordId={editRecordId}

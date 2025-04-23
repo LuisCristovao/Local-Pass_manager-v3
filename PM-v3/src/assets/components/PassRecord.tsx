@@ -1,12 +1,10 @@
-import { useEffect, useState, useRef, RefObject } from "react";
+import { useState,  } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 
 // Define the props interface
 interface PassRecordProps {
   edit: boolean;
-  storedPasswords: any[]; // Replace `any` with a specific type if possible
-  setDecryptedPasswords: any; // Replace `any` with specific type
   userPassRef: React.RefObject<string>; // Adjust based on the ref's type
   setState: React.Dispatch<React.SetStateAction<string>>; // ✅ typed! // Replace `any` with specific state type
   editRecordId: string | undefined; // Adjust based on actual type
@@ -16,8 +14,6 @@ interface PassRecordProps {
 // Define the component with React.FC and the props interface
 const PassRecord: React.FC<PassRecordProps> = ({
   edit,
-  storedPasswords,
-  setDecryptedPasswords,
   userPassRef,
   setState,
   editRecordId,
@@ -27,7 +23,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
   const [copyPassText, setCopyPassText] = useState("Copy Password");
   const [submitButtonText, setSubmitButtonText] = useState("Edit");
   const [submitButtonText2, setSubmitButtonText2] = useState("Submit");
-  const [showInputEdit, setShowInputEdit] = useState(false);
+  
   const [isHoverSubmitButton, setIsHoverSubmitButton] = useState(false);
 
   const copyInputValue = async (inputId: string) => {
@@ -44,7 +40,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
     }
   };
 
-  const input_styles = {
+  const input_styles: { [key: string]: () => React.CSSProperties } = {
     Edit: () => {
       return {
         height: `0px`,
