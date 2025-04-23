@@ -16,7 +16,7 @@ function ManagePasswords() {
   const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
   const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
- 
+
   const [editRecordId, setEditRecordId] = useState("");
 
   const navigate = useNavigate();
@@ -89,6 +89,15 @@ function ManagePasswords() {
     };
   }, [state]);
 
+  function showPassword(input_id: string) {
+    let input = document.getElementById(input_id) as HTMLInputElement;
+    if (input.type == "password") {
+      input.type = "text";
+    } else {
+      input.type = "password";
+    }
+  }
+
   const pages: any = {
     intro: () => {
       if (loading) return <p>Loading...</p>;
@@ -116,6 +125,7 @@ function ManagePasswords() {
         <>
           <h1>Insert Master Password</h1>
           <input
+            id="pass"
             type="password"
             onKeyDown={async (e) => {
               if (e.key === "Enter") {
@@ -140,7 +150,16 @@ function ManagePasswords() {
               }
             }}
           ></input>
-          {wrong_pass && <p>wrong pass</p>}
+          <p>
+            show password:
+            <input
+              type="checkbox"
+              onClick={() => {
+                showPassword("pass");
+              }}
+            />
+          </p>
+          {wrong_pass && <h3 style={{color:"red"}}>Wrong Password!</h3>}
         </>
       );
     },
