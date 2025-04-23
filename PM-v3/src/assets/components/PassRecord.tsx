@@ -91,6 +91,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
       pass: await Crypto.encrypt(pass, password),
       comments: await Crypto.encrypt(comments, password),
       timestamp: await Crypto.encrypt(Date.now().toString(), password),
+      sync:await Crypto.sha256("".concat(site).concat(user).concat(pass).concat(comments)),
     };
 
     // You could now store input_data into IndexedDB, etc.

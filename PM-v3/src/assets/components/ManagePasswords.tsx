@@ -94,6 +94,7 @@ function ManagePasswords() {
         pass: await Crypto.decrypt(p.pass, userPassRef.current),
         comments: await Crypto.decrypt(p.comments, userPassRef.current),
         timestamp: await Crypto.decrypt(p.timestamp, userPassRef.current),
+        sync: p.sync,
       }))
     );
     storedPasswords.current = decrypted;
