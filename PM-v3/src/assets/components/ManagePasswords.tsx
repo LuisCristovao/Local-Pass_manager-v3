@@ -97,6 +97,25 @@ function ManagePasswords() {
       input.type = "password";
     }
   }
+  async function enterPassManager(password:string){
+    userPassRef.current = password;
+
+    const canAccess = await Crypto.canDecrypt(
+      passwords[0].site,
+      userPassRef.current
+    );
+
+    if (canAccess) {
+      setState("manage");
+    } else {
+      console.warn("Wrong password");
+      // Optional: show error to user
+      setwrongPass(true);
+      setTimeout(() => {
+        setwrongPass(false);
+      }, 1000);
+    }
+  }
 
   const pages: any = {
     intro: () => {
@@ -120,7 +139,6 @@ function ManagePasswords() {
                 if (e.key === "Enter") {
                   const target = e.target as HTMLInputElement;
                   userPassRef.current = target.value;
-                  console.log("Saved password:", userPassRef.current);
                   setState("manage");
                 }
               }}
@@ -154,26 +172,15 @@ function ManagePasswords() {
             onKeyDown={async (e) => {
               if (e.key === "Enter") {
                 const target = e.target as HTMLInputElement;
-                userPassRef.current = target.value;
-
-                const canAccess = await Crypto.canDecrypt(
-                  passwords[0].site,
-                  userPassRef.current
-                );
-
-                if (canAccess) {
-                  setState("manage");
-                } else {
-                  console.warn("Wrong password");
-                  // Optional: show error to user
-                  setwrongPass(true);
-                  setTimeout(() => {
-                    setwrongPass(false);
-                  }, 1000);
-                }
+                enterPassManager(target.value)
+                
               }
             }}
           ></input>
+          <button onClick={()=>{
+            const password=document.getElementById("pass") as HTMLInputElement
+            enterPassManager(password.value)
+          }}>Enter</button>
           <p>
             show password:
             <input
