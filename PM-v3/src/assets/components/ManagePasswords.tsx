@@ -134,6 +134,7 @@ function ManagePasswords() {
             <input
               key={crypto.randomUUID()}
               id="pass"
+              placeholder="Password"
               type="password"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -168,6 +169,7 @@ function ManagePasswords() {
           <input
             key={crypto.randomUUID()}
             id="pass"
+            placeholder="Password"
             type="password"
             onKeyDown={async (e) => {
               if (e.key === "Enter") {

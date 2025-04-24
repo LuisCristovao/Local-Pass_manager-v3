@@ -1,4 +1,4 @@
-import { useState,  } from "react";
+import { useState } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 
@@ -23,12 +23,18 @@ const PassRecord: React.FC<PassRecordProps> = ({
   const [copyPassText, setCopyPassText] = useState("Copy Password");
   const [submitButtonText, setSubmitButtonText] = useState("Edit");
   const [submitButtonText2, setSubmitButtonText2] = useState("Submit");
-  
+
   const [isHoverSubmitButton, setIsHoverSubmitButton] = useState(false);
 
   const copyInputValue = async (inputId: string) => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
-    if (input) {
+    if (!input) {
+      console.error(`Input element with ID ${inputId} not found`);
+      return;
+    }
+
+    // Modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(input.value);
         console.log(`Value from ${inputId} copied to clipboard`);
@@ -36,7 +42,14 @@ const PassRecord: React.FC<PassRecordProps> = ({
         console.error(`Failed to copy from ${inputId}: `, err);
       }
     } else {
-      console.error(`Input element with ID ${inputId} not found`);
+      // Fallback for older browsers
+      try {
+        input.select(); // Select the input content
+        document.execCommand("copy"); // Deprecated but works in some older browsers
+        console.log(`Value from ${inputId} copied using fallback`);
+      } catch (err) {
+        console.error(`Fallback copy failed for ${inputId}: `, err);
+      }
     }
   };
 
@@ -87,7 +100,9 @@ const PassRecord: React.FC<PassRecordProps> = ({
       pass: await Crypto.encrypt(pass, password),
       comments: await Crypto.encrypt(comments, password),
       timestamp: await Crypto.encrypt(Date.now().toString(), password),
-      sync:await Crypto.sha256("".concat(site).concat(user).concat(pass).concat(comments)),
+      sync: await Crypto.sha256(
+        "".concat(site).concat(user).concat(pass).concat(comments)
+      ),
     };
 
     // You could now store input_data into IndexedDB, etc.
@@ -99,6 +114,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
         }, 1000);
         return "Saved!";
       });
+      setState("manage");
     } else {
       await DB.update(id, input_data);
       setSubmitButtonText(() => {
@@ -108,8 +124,6 @@ const PassRecord: React.FC<PassRecordProps> = ({
         return "Saved!";
       });
     }
-    
-    //setState("manage");
   };
 
   const handleDelete = async (id: string = "") => {
@@ -146,11 +160,13 @@ const PassRecord: React.FC<PassRecordProps> = ({
 
   //obtain data for the edit
   let data;
-  if (edit && editRecordId != undefined) {// if edit record 
+  if (edit && editRecordId != undefined) {
+    // if edit record
     data = decryptedPasswords.filter((el: any) => {
       return el.id === editRecordId;
     })[0];
-  }else{//if new record 
+  } else {
+    //if new record
     // setSubmitButtonText("Submit")
   }
 
@@ -173,7 +189,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
             placeholder="site/page ..."
             id="site_input"
             defaultValue={data.site}
-            onInput={()=>{
+            onInput={() => {
               handleSubmit(editRecordId);
             }}
           />
@@ -183,7 +199,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
             placeholder="Description ..."
             id="comments_input"
             defaultValue={data.comments}
-            onInput={()=>{
+            onInput={() => {
               handleSubmit(editRecordId);
             }}
           />
