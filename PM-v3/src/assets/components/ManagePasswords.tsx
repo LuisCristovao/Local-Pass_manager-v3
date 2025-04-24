@@ -199,7 +199,7 @@ function ManagePasswords() {
           </button>
           <h1>Manage Passwords</h1>
           <input
-            key={crypto.randomUUID()}
+            
             type="text"
             placeholder="Search"
             onInput={(e) => {
