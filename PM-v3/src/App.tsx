@@ -27,30 +27,47 @@ function App() {
             id: "import",
             text: "Import",
             onclick: () => {
-              
+              //needs to go to import page
             },
           },
           {
             id: "exoprt",
             text: "Export",
             onclick: () => {
-              setSubMenuSelected(2)
+              setSubMenuSelected(2);
               subMenuRef.current = [
                 {
-                  id:"export encrypted",
-                  text:"Export Encrypted",
-                  onclick:()=>{
-                    
-                  }
+                  id: "export encrypted",
+                  text: "Export Encrypted",
+                  onclick: () => {
+                    setSubMenuSelected(3);
+                    subMenuRef.current = [
+                      {
+                        id:"copy to clipboard",
+                        text:"copy to clipboard",
+                        onclick:()=>{
+
+                        }
+                      },
+                      {
+                        id:"save to encrypted file",
+                        text:"save to encrypted file",
+                        onclick:()=>{
+
+                        }
+                      },
+                    ];
+                  },
                 },
                 {
-                  id:"export decrypted",
-                  text:"Export Dencrypted",
-                  onclick:()=>{
+                  id: "export decrypted",
+                  text: "Export Decrypted",
+                  onclick: () => {
+                    //needs to go to login page
                     
-                  }
-                }
-              ]
+                  },
+                },
+              ];
             },
           },
         ];
@@ -68,7 +85,7 @@ function App() {
     },
   ];
 
-  return subMenuSelected===0 ? (
+  return subMenuSelected === 0 ? (
     <>
       <ul className="menu-list">
         {menu_list.map((op) => {
@@ -89,7 +106,7 @@ function App() {
     <>
       <button
         style={{ position: "absolute", top: "10px", left: "10px" }}
-        onClick={() =>setSubMenuSelected(0)}
+        onClick={() => setSubMenuSelected(0)}
       >
         Go back
       </button>
