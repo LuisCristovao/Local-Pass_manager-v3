@@ -105,8 +105,16 @@ function ManagePasswords() {
       if (passwords.length === 0) {
         return (
           <>
-            <h1>No Passwords yet</h1>
+            <button
+              style={{ position: "absolute", top: "10px", left: "10px" }}
+              onClick={() => navigate("/")}
+            >
+              Go back
+            </button>
+            <h2>No Passwords yet</h2>
             <input
+              key={crypto.randomUUID()}
+              id="pass"
               type="password"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -117,14 +125,30 @@ function ManagePasswords() {
                 }
               }}
             ></input>
+            <p>
+              show password:
+              <input
+                type="checkbox"
+                onClick={() => {
+                  showPassword("pass");
+                }}
+              />
+            </p>
           </>
         );
       }
       // already has password
       return (
         <>
-          <h1>Insert Master Password</h1>
+          <button
+            style={{ position: "absolute", top: "10px", left: "10px" }}
+            onClick={() => navigate("/")}
+          >
+            Go back
+          </button>
+          <h2>Insert Master Password</h2>
           <input
+            key={crypto.randomUUID()}
             id="pass"
             type="password"
             onKeyDown={async (e) => {
@@ -159,7 +183,7 @@ function ManagePasswords() {
               }}
             />
           </p>
-          {wrong_pass && <h3 style={{color:"red"}}>Wrong Password!</h3>}
+          {wrong_pass && <h3 style={{ color: "red" }}>Wrong Password!</h3>}
         </>
       );
     },
@@ -175,6 +199,7 @@ function ManagePasswords() {
           </button>
           <h1>Manage Passwords</h1>
           <input
+            key={crypto.randomUUID()}
             type="text"
             placeholder="Search"
             onInput={(e) => {

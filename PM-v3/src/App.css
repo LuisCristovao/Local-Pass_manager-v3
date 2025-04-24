@@ -8,7 +8,7 @@
   font-family: "Avenir Next", "Avenir", sans-serif;
 }
 .menu-list{
-  font-size: 1.5em;
+  font-size: 2em;
   list-style-type: none;
   display: flex;
   flex-direction: column; /* Default for mobile */
@@ -16,6 +16,10 @@
   justify-content: center; /* Center horizontally */
   padding: 0;
   margin: 0;
+  user-select: none; /* Prevents text selection */
+  -webkit-user-select: none; /* For Safari */
+  -moz-user-select: none; /* For Firefox */
+  -ms-user-select: none; /* For older Edge */
 }
 
 .menu-list li{
