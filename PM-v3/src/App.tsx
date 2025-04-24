@@ -1,10 +1,13 @@
 // import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
 import "./App.css";
+import { useRef, useState } from "react";
 // import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
   const navigate = useNavigate();
+  const [subMenuSelected, setSubMenuSelected] = useState(0);
+  const subMenuRef = useRef<any[]>([]);
 
   const menu_list = [
     {
@@ -17,7 +20,41 @@ function App() {
     {
       id: "import_export",
       text: "Import/Export Passwords",
-      onclick: () => {},
+      onclick: () => {
+        setSubMenuSelected(1);
+        subMenuRef.current = [
+          {
+            id: "import",
+            text: "Import",
+            onclick: () => {
+              
+            },
+          },
+          {
+            id: "exoprt",
+            text: "Export",
+            onclick: () => {
+              setSubMenuSelected(2)
+              subMenuRef.current = [
+                {
+                  id:"export encrypted",
+                  text:"Export Encrypted",
+                  onclick:()=>{
+                    
+                  }
+                },
+                {
+                  id:"export decrypted",
+                  text:"Export Dencrypted",
+                  onclick:()=>{
+                    
+                  }
+                }
+              ]
+            },
+          },
+        ];
+      },
     },
     {
       id: "sync",
@@ -31,10 +68,33 @@ function App() {
     },
   ];
 
-  return (
+  return subMenuSelected===0 ? (
     <>
       <ul className="menu-list">
         {menu_list.map((op) => {
+          return (
+            <li
+              key={op.id}
+              onClick={() => {
+                op.onclick();
+              }}
+            >
+              {op.text}
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  ) : (
+    <>
+      <button
+        style={{ position: "absolute", top: "10px", left: "10px" }}
+        onClick={() =>setSubMenuSelected(0)}
+      >
+        Go back
+      </button>
+      <ul className="menu-list">
+        {subMenuRef.current.map((op) => {
           return (
             <li
               key={op.id}
