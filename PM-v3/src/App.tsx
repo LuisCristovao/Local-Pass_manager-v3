@@ -2,12 +2,99 @@
 import { useNavigate } from "react-router-dom"; // Add this import
 import "./App.css";
 import { useRef, useState } from "react";
+import * as DB from "./assets/utils/dbUtils";
+import * as Crypto from "./assets/utils/cryptoUtils";
 // import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
   const navigate = useNavigate();
-  const [subMenuSelected, setSubMenuSelected] = useState(0);
-  const subMenuRef = useRef<any[]>([]);
+
+  const historyRef = useRef(["main"]);
+
+  const menu_options:any = {
+    main: [
+      {
+        id: "manage",
+        text: "Manage Passwords",
+        onclick: () => {
+          navigate("/manage");
+        },
+      },
+      {
+        id: "import_export",
+        text: "Import/Export Passwords",
+        onclick: () => {
+          setMenuItems(menu_options["import_export"]);
+          const new_history = [...historyRef.current, "import_export"];
+          historyRef.current = new_history;
+        },
+      },
+      {
+        id: "sync",
+        text: "Sync Passwords",
+        onclick: () => {
+          //go to sync page
+        },
+      },
+      {
+        id: "change_master_pass",
+        text: "Change master Passwords",
+        onclick: () => {
+          //go to another page
+        },
+      },
+    ],
+    import_export: [
+      {
+        id: "import",
+        text: "Import",
+        onclick: () => {
+          //go to another page
+        },
+      },
+      {
+        id: "export",
+        text: "Export",
+        onclick: () => {
+          setMenuItems(menu_options["export"]);
+          const new_history = [...historyRef.current, "export"];
+          historyRef.current = new_history;
+        },
+      },
+    ],
+    export: [
+      {
+        id: "export encrypted",
+        text: "Export encrypted DB",
+        onclick: () => {
+          setMenuItems(menu_options["export_encrypted"]);
+          const new_history = [...historyRef.current, "export_encrypted"];
+          historyRef.current = new_history;
+        },
+      },
+      {
+        id: "export decrypted",
+        text: "Export Decrypted DB",
+        onclick: () => {
+          //change page
+        },
+      },
+    ],
+    export_encrypted: [
+      {
+        id: "copy to clipboard",
+        text: "copy to clipboard",
+        onclick: async () => {},
+      },
+      {
+        id: "save to encrypted file",
+        text: "save to encrypted file",
+        onclick: () => {},
+      },
+    ],
+    export_decrypted: [],
+  };
+  const [menuItems, setMenuItems]: any[] = useState(menu_options["main"]);
 
   function copyToClipboard(text: string) {
     if (navigator.clipboard) {
@@ -21,6 +108,7 @@ function App() {
         });
     }
   }
+
   const downloadJsonAsFile = (jsonContent: {}, fileName: string) => {
     // Create a Blob containing the JSON content
     const blob = new Blob([JSON.stringify(jsonContent)], {
@@ -48,108 +136,25 @@ function App() {
     URL.revokeObjectURL(blobUrl);
   };
 
-  const menu_list = [
-    {
-      id: "manage",
-      text: "Manage Passwords",
-      onclick: () => {
-        navigate("/manage");
-      },
-    },
-    {
-      id: "import_export",
-      text: "Import/Export Passwords",
-      onclick: () => {
-        setSubMenuSelected(1);
-        subMenuRef.current = [
-          {
-            id: "import",
-            text: "Import",
-            onclick: () => {
-              //needs to go to import page
-            },
-          },
-          {
-            id: "exoprt",
-            text: "Export",
-            onclick: () => {
-              setSubMenuSelected(2);
-              subMenuRef.current = [
-                {
-                  id: "export encrypted",
-                  text: "Export Encrypted DB",
-                  onclick: () => {
-                    setSubMenuSelected(3);
-                    subMenuRef.current = [
-                      {
-                        id: "copy to clipboard",
-                        text: "copy to clipboard",
-                        onclick: () => {},
-                      },
-                      {
-                        id: "save to encrypted file",
-                        text: "save to encrypted file",
-                        onclick: () => {},
-                      },
-                    ];
-                  },
-                },
-                {
-                  id: "export decrypted",
-                  text: "Export Decrypted DB",
-                  onclick: () => {
-                    //needs to go to login page
-                  },
-                },
-              ];
-            },
-          },
-        ];
-      },
-    },
-    {
-      id: "sync",
-      text: "Sync Passwords",
-      onclick: () => {
-        //go to sync page
-      },
-    },
-    {
-      id: "change_master_pass",
-      text: "Change master Passwords",
-      onclick: () => {
-        //go to another page
-      },
-    },
-  ];
+  return (
+    <>
+      {historyRef.current.length > 1 && (
+        <button
+          style={{ position: "absolute", top: "10px", left: "10px" }}
+          onClick={() => {
+            const new_history = [...historyRef.current];
+            new_history.pop();
+            historyRef.current = new_history;
+            const last_history = new_history[new_history.length - 1];
 
-  return subMenuSelected === 0 ? (
-    <>
+            setMenuItems(menu_options[last_history]);
+          }}
+        >
+          Go back
+        </button>
+      )}
       <ul className="menu-list">
-        {menu_list.map((op) => {
-          return (
-            <li
-              key={op.id}
-              onClick={() => {
-                op.onclick();
-              }}
-            >
-              {op.text}
-            </li>
-          );
-        })}
-      </ul>
-    </>
-  ) : (
-    <>
-      <button
-        style={{ position: "absolute", top: "10px", left: "10px" }}
-        onClick={() => setSubMenuSelected(0)}
-      >
-        Go back
-      </button>
-      <ul className="menu-list">
-        {subMenuRef.current.map((op) => {
+        {menuItems.map((op: any) => {
           return (
             <li
               key={op.id}
