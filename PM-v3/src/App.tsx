@@ -11,6 +11,48 @@ function App() {
 
   const historyRef = useRef(["main"]);
 
+
+  function copyToClipboard(text: string) {
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          console.log("Text copied to clipboard");
+        })
+        .catch((err) => {
+          console.error("Failed to copy text: ", err);
+        });
+    }
+  }
+
+  const downloadJsonAsFile = (jsonContent: {}, fileName: string) => {
+    // Create a Blob containing the JSON content
+    const blob = new Blob([JSON.stringify(jsonContent)], {
+      type: "application/json",
+    });
+
+    // Create a Blob URL for the Blob
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Create an <a> element
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName || "data.json"; // Set the download attribute with a default file name if not provided
+
+    // Append the <a> element to the document
+    document.body.appendChild(a);
+
+    // Trigger a click event on the <a> element to simulate a download
+    a.click();
+
+    // Remove the <a> element from the document
+    document.body.removeChild(a);
+
+    // Optionally revoke the Blob URL after simulating the download
+    URL.revokeObjectURL(blobUrl);
+  };
+
+
   const menu_options:any = {
     main: [
       {
@@ -66,10 +108,9 @@ function App() {
       {
         id: "export encrypted",
         text: "Export encrypted DB",
-        onclick: () => {
-          setMenuItems(menu_options["export_encrypted"]);
-          const new_history = [...historyRef.current, "export_encrypted"];
-          historyRef.current = new_history;
+        onclick: async () => {
+          const data = await DB.load()
+          downloadJsonAsFile(data,"db_encrypted.json")
         },
       },
       {
@@ -79,62 +120,11 @@ function App() {
           //change page
         },
       },
-    ],
-    export_encrypted: [
-      {
-        id: "copy to clipboard",
-        text: "copy to clipboard",
-        onclick: async () => {},
-      },
-      {
-        id: "save to encrypted file",
-        text: "save to encrypted file",
-        onclick: () => {},
-      },
-    ],
-    export_decrypted: [],
+    ]
   };
   const [menuItems, setMenuItems]: any[] = useState(menu_options["main"]);
 
-  function copyToClipboard(text: string) {
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          console.log("Text copied to clipboard");
-        })
-        .catch((err) => {
-          console.error("Failed to copy text: ", err);
-        });
-    }
-  }
-
-  const downloadJsonAsFile = (jsonContent: {}, fileName: string) => {
-    // Create a Blob containing the JSON content
-    const blob = new Blob([JSON.stringify(jsonContent)], {
-      type: "application/json",
-    });
-
-    // Create a Blob URL for the Blob
-    const blobUrl = URL.createObjectURL(blob);
-
-    // Create an <a> element
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = fileName || "data.json"; // Set the download attribute with a default file name if not provided
-
-    // Append the <a> element to the document
-    document.body.appendChild(a);
-
-    // Trigger a click event on the <a> element to simulate a download
-    a.click();
-
-    // Remove the <a> element from the document
-    document.body.removeChild(a);
-
-    // Optionally revoke the Blob URL after simulating the download
-    URL.revokeObjectURL(blobUrl);
-  };
+  
 
   return (
     <>
