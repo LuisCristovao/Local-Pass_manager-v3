@@ -38,7 +38,7 @@ function App() {
               subMenuRef.current = [
                 {
                   id: "export encrypted",
-                  text: "Export Encrypted",
+                  text: "Export Encrypted DB",
                   onclick: () => {
                     setSubMenuSelected(3);
                     subMenuRef.current = [
@@ -61,7 +61,7 @@ function App() {
                 },
                 {
                   id: "export decrypted",
-                  text: "Export Decrypted",
+                  text: "Export Decrypted DB",
                   onclick: () => {
                     //needs to go to login page
                     
@@ -76,12 +76,17 @@ function App() {
     {
       id: "sync",
       text: "Sync Passwords",
-      onclick: () => {},
+      onclick: () => {
+        //go to sync page
+        
+      },
     },
     {
       id: "change_master_pass",
       text: "Change master Passwords",
-      onclick: () => {},
+      onclick: () => {
+        //go to another page
+      },
     },
   ];
 
