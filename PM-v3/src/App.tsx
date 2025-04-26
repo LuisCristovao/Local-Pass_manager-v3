@@ -91,7 +91,9 @@ function App() {
         id: "import",
         text: "Import",
         onclick: () => {
-          //go to another page
+          setMenuItems(menu_options["import"]);
+          const new_history = [...historyRef.current, "export"];
+          historyRef.current = new_history;
         },
       },
       {
@@ -116,6 +118,22 @@ function App() {
       {
         id: "export decrypted",
         text: "Export Decrypted DB",
+        onclick: () => {
+          //change page
+        },
+      },
+    ],
+    import:[
+      {
+        id: "import encrypted",
+        text: "Import encrypted DB",
+        onclick: async () => {
+         //new page
+        },
+      },
+      {
+        id: "import decrypted",
+        text: "Import Decrypted DB",
         onclick: () => {
           //change page
         },
