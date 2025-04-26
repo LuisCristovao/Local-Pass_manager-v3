@@ -148,6 +148,7 @@ function App() {
         text: "Import encrypted DB",
         onclick: async () => {
          //new page
+         navigate("/ImportE")
         },
       },
       {

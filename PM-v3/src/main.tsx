@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { HashRouter, Routes, Route } from 'react-router-dom'; // Add Routes and Route
 
 import ManagePasswords from './assets/components/ManagePasswords.tsx'; // Import the new ManagePasswords component
+import ImportEncrypted from './assets/components/ImportEncrypted.tsx'; // Import the new ImportEncrypted component
 
 
 createRoot(document.getElementById('root')!).render(
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/manage" element={<ManagePasswords />} />
+        <Route path="/importE" element={<ImportEncrypted />} />
       </Routes>
     </HashRouter>
   /*</StrictMode>,*/

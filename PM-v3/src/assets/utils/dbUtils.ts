@@ -68,6 +68,29 @@ export async function deleteDatabase(): Promise<void> {
   await deleteDB(DB_NAME);
 }
 
+// Check if the database exists
+export async function databaseExists(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME);
+
+    let existed = true;
+
+    request.onupgradeneeded = () => {
+      // This event only fires if DB didn't exist before
+      existed = false;
+    };
+
+    request.onsuccess = () => {
+      request.result.close();
+      resolve(existed);
+    };
+
+    request.onerror = () => {
+      resolve(false);
+    };
+  });
+}
+
 
 
 // ONLY for development/debugging
