@@ -109,8 +109,18 @@ function App() {
       {
         id: "delete_db",
         text: "Delete Local Data",
-        onclick: () => {
+        onclick: async() => {
           //do code here
+          const result=confirm("Are you sure you want to delete the Data Base?")
+          if (result) {
+            try {
+              await DB.deleteDatabase();
+              alert("Database deleted successfully!");
+            } catch (error) {
+              alert("Failed to delete the database: " + (error as Error).message);
+            }
+          }
+          
         },
       },
     ],
