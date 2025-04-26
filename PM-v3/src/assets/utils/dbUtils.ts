@@ -1,4 +1,4 @@
-import { openDB } from "idb";
+import { openDB, deleteDB } from "idb";
 
 const DB_NAME = "PM_DB";
 const STORE_NAME = "records";
@@ -61,6 +61,14 @@ export async function remove(id: string): Promise<void> {
 
   await db.delete(STORE_NAME, id);
 }
+
+// Delete the entire database
+export async function deleteDatabase(): Promise<void> {
+  await (await dbPromise).close(); // close any open connections first
+  await deleteDB(DB_NAME);
+}
+
+
 
 // ONLY for development/debugging
 // if (typeof window !== "undefined") {
