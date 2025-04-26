@@ -103,6 +103,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
       sync: await Crypto.sha256(
         "".concat(site).concat(user).concat(pass).concat(comments)
       ),
+      is_deleted: await Crypto.encrypt("false", password),
     };
 
     // You could now store input_data into IndexedDB, etc.
@@ -132,8 +133,37 @@ const PassRecord: React.FC<PassRecordProps> = ({
 
     // Handling the response
     if (result) {
-      // delete
-      await DB.remove(id);
+      // delete is just update the is_deleted field and remove data
+      const site = (document.getElementById("site_input") as HTMLInputElement)
+        .value;
+      const user = (document.getElementById("user_input") as HTMLInputElement)
+        .value;
+      const pass = (document.getElementById("pass_input") as HTMLInputElement)
+        .value;
+      const comments = (
+        document.getElementById("comments_input") as HTMLTextAreaElement
+      ).value;
+
+      const password = userPassRef.current;
+      if (!password) {
+        alert("Password is not set.");
+        return;
+      }
+
+      const input_data = {
+        site: "",
+        user: "",
+        pass: "",
+        comments: "",
+        timestamp: await Crypto.encrypt(Date.now().toString(), password),
+        sync: await Crypto.sha256(
+          "".concat(site).concat(user).concat(pass).concat(comments)
+        ),
+        is_deleted: await Crypto.encrypt("true", password),
+      };
+      await DB.update(id, input_data);
+      //complet delete
+      //await DB.remove(id);
       setState("manage");
     } else {
     }

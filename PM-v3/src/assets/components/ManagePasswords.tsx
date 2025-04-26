@@ -33,6 +33,7 @@ function ManagePasswords() {
         comments: await Crypto.decrypt(p.comments, userPassRef.current),
         timestamp: await Crypto.decrypt(p.timestamp, userPassRef.current),
         sync: p.sync,
+        is_deleted: await Crypto.decrypt(p.is_deleted, userPassRef.current),
       }))
     );
     storedPasswords.current = decrypted;
@@ -97,11 +98,11 @@ function ManagePasswords() {
       input.type = "password";
     }
   }
-  async function enterPassManager(password:string){
+  async function enterPassManager(password: string) {
     userPassRef.current = password;
 
     const canAccess = await Crypto.canDecrypt(
-      passwords[0].site,
+      passwords[0].timestamp,
       userPassRef.current
     );
 
@@ -174,15 +175,20 @@ function ManagePasswords() {
             onKeyDown={async (e) => {
               if (e.key === "Enter") {
                 const target = e.target as HTMLInputElement;
-                enterPassManager(target.value)
-                
+                enterPassManager(target.value);
               }
             }}
           ></input>
-          <button onClick={()=>{
-            const password=document.getElementById("pass") as HTMLInputElement
-            enterPassManager(password.value)
-          }}>Enter</button>
+          <button
+            onClick={() => {
+              const password = document.getElementById(
+                "pass"
+              ) as HTMLInputElement;
+              enterPassManager(password.value);
+            }}
+          >
+            Enter
+          </button>
           <p>
             show password:
             <input
@@ -208,7 +214,6 @@ function ManagePasswords() {
           </button>
           <h1>Manage Passwords</h1>
           <input
-            
             type="text"
             placeholder="Search"
             onInput={(e) => {
@@ -238,7 +243,9 @@ function ManagePasswords() {
           </div>
 
           <div className="passwords-list">
-            {decryptedPasswords.map((p) => (
+            {decryptedPasswords
+            .filter(p => p.is_deleted === "false")
+            .map((p) => (
               <div className="list-element" key={p.id}>
                 <p className="site" style={{ textAlign: "center" }}>
                   <b>{p.site}</b>
