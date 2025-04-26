@@ -106,6 +106,13 @@ function App() {
           //go to another page
         },
       },
+      {
+        id: "delete_db",
+        text: "Delete Local Data",
+        onclick: () => {
+          //do code here
+        },
+      },
     ],
     
     export: [
