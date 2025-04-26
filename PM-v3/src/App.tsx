@@ -63,11 +63,11 @@ function App() {
         },
       },
       {
-        id: "import_export",
-        text: "Import/Export Passwords",
+        id: "other_options",
+        text: "Other Options",
         onclick: () => {
-          setMenuItems(menu_options["import_export"]);
-          const new_history = [...historyRef.current, "import_export"];
+          setMenuItems(menu_options["other_options"]);
+          const new_history = [...historyRef.current, "other_options"];
           historyRef.current = new_history;
         },
       },
@@ -78,6 +78,27 @@ function App() {
           //go to sync page
         },
       },
+      
+    ],
+    other_options:[
+      {
+        id: "import",
+        text: "Import Data",
+        onclick: () => {
+          setMenuItems(menu_options["import"]);
+          const new_history = [...historyRef.current, "import"];
+          historyRef.current = new_history;
+        },
+      },
+      {
+        id: "export",
+        text: "Export Data",
+        onclick: () => {
+          setMenuItems(menu_options["export"]);
+          const new_history = [...historyRef.current, "export"];
+          historyRef.current = new_history;
+        },
+      },
       {
         id: "change_master_pass",
         text: "Change master Passwords",
@@ -86,26 +107,7 @@ function App() {
         },
       },
     ],
-    import_export: [
-      {
-        id: "import",
-        text: "Import",
-        onclick: () => {
-          setMenuItems(menu_options["import"]);
-          const new_history = [...historyRef.current, "export"];
-          historyRef.current = new_history;
-        },
-      },
-      {
-        id: "export",
-        text: "Export",
-        onclick: () => {
-          setMenuItems(menu_options["export"]);
-          const new_history = [...historyRef.current, "export"];
-          historyRef.current = new_history;
-        },
-      },
-    ],
+    
     export: [
       {
         id: "export encrypted",
