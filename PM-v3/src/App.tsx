@@ -114,7 +114,7 @@ function App() {
           const result=confirm("Are you sure you want to delete the Data Base?")
           if (result) {
             try {
-              await DB.deleteDatabase();
+              await DB.clearDatabase();
               alert("Database deleted successfully!");
             } catch (error) {
               alert("Failed to delete the database: " + (error as Error).message);

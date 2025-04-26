@@ -68,6 +68,14 @@ export async function deleteDatabase(): Promise<void> {
   await deleteDB(DB_NAME);
 }
 
+// Clear all records in the database without deleting the DB itself
+export async function clearDatabase(): Promise<void> {
+  const db = await dbPromise;
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  await tx.store.clear();
+  await tx.done;
+}
+
 // Check if the database exists
 export async function databaseExists(): Promise<boolean> {
   return new Promise((resolve) => {
