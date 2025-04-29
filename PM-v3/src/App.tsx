@@ -156,6 +156,7 @@ function App() {
         text: "Import Decrypted DB",
         onclick: () => {
           //change page
+          navigate("/ImportD")
         },
       },
     ]
