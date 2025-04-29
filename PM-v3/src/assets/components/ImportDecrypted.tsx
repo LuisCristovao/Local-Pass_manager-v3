@@ -8,14 +8,12 @@ function ImportDecrypted() {
   // if (typeof window !== "undefined") {
   //   (window as any).PM = { decryptedPasswords, Search };
   // }
+  const [state, setState] = useState("intro");
+  const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
 
-    return (
+  
 
-        <>
-        </>
-    )
-
-
+  return <></>;
 }
 
-export default ImportDecrypted
+export default ImportDecrypted;

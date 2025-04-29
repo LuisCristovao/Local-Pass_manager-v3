@@ -120,7 +120,9 @@ function ManagePasswords() {
 
   const pages: any = {
     intro: () => {
-      if (loading) return <p>Loading...</p>;
+      if (loading) return <p style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>
+      🔄 Loading...
+    </p>
 
       if (passwords.length === 0) {
         return (
