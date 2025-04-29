@@ -47,6 +47,18 @@ function ImportEncrypted() {
   };
   const navigate = useNavigate();
 
+  const renderSuccessMessage=() =>{
+    if (success === "success") {
+      return <p>Success </p>;
+    } else if (success === "error") {
+      return <p>Error </p>;
+    } else if (success === "nothing") {
+      return null;
+    } else {
+      return null;
+    }
+  }
+
   return (
     <>
       <button
@@ -68,6 +80,7 @@ function ImportEncrypted() {
           marginBottom: "20px",
           backgroundColor: "transparent",
           fontSize: "1.5em",
+          color:"aliceblue"
         }}
         placeholder="Insert Encrypted JSON here..."
       ></textarea>
@@ -100,6 +113,9 @@ function ImportEncrypted() {
           Append
         </button>
       </div>
+      {
+        renderSuccessMessage()
+      }
     </>
   );
 }
