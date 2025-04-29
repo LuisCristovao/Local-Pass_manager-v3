@@ -5,15 +5,14 @@ import "../css/ManagePasswords.css";
 import { useNavigate } from "react-router-dom"; // Add this import
 import * as Search from "../utils/searchUtils";
 import PassRecord from "./PassRecord";
+import InsertPassword from "./InsertPassword";
 
 function ManagePasswords() {
   const [state, setState] = useState("intro");
-  const [passwords, setPasswords] = useState<Record<string, any>[]>([]);
+  
   const [decryptedPasswords, setDecryptedPasswords] = useState<
     Record<string, any>[]
   >([]);
-  const [loading, setLoading] = useState(true);
-  const [wrong_pass, setwrongPass] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
   const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
 
@@ -42,16 +41,6 @@ function ManagePasswords() {
 
   //decrypt passwords in manage state
   useEffect(() => {
-    if (state === "intro") {
-      // Load passwords on mount
-      const fetchData = async () => {
-        const data = await DB.load();
-        setPasswords(data);
-        setLoading(false);
-      };
-
-      fetchData();
-    }
     if (state === "manage") {
       //change root height
       const root = document.getElementById("root");
@@ -90,119 +79,13 @@ function ManagePasswords() {
     };
   }, [state]);
 
-  function showPassword(input_id: string) {
-    let input = document.getElementById(input_id) as HTMLInputElement;
-    if (input.type == "password") {
-      input.type = "text";
-    } else {
-      input.type = "password";
-    }
-  }
-  async function enterPassManager(password: string) {
-    userPassRef.current = password;
-
-    const canAccess = await Crypto.canDecrypt(
-      passwords[0].timestamp,
-      userPassRef.current
-    );
-
-    if (canAccess) {
-      setState("manage");
-    } else {
-      console.warn("Wrong password");
-      // Optional: show error to user
-      setwrongPass(true);
-      setTimeout(() => {
-        setwrongPass(false);
-      }, 1000);
-    }
-  }
-
   const pages: any = {
     intro: () => {
-      if (loading) return <p style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>
-      🔄 Loading...
-    </p>
-
-      if (passwords.length === 0) {
-        return (
-          <>
-            <button
-              style={{ position: "absolute", top: "10px", left: "10px" }}
-              onClick={() => navigate("/")}
-            >
-              Go back
-            </button>
-            <h2>No Passwords yet</h2>
-            <input
-              key={crypto.randomUUID()}
-              id="pass"
-              placeholder="Password"
-              type="password"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const target = e.target as HTMLInputElement;
-                  userPassRef.current = target.value;
-                  setState("manage");
-                }
-              }}
-            ></input>
-            <p>
-              show password:
-              <input
-                type="checkbox"
-                onClick={() => {
-                  showPassword("pass");
-                }}
-              />
-            </p>
-          </>
-        );
-      }
-      // already has password
       return (
-        <>
-          <button
-            style={{ position: "absolute", top: "10px", left: "10px" }}
-            onClick={() => navigate("/")}
-          >
-            Go back
-          </button>
-          <h2>Insert Master Password</h2>
-          <input
-            key={crypto.randomUUID()}
-            id="pass"
-            placeholder="Password"
-            type="password"
-            onKeyDown={async (e) => {
-              if (e.key === "Enter") {
-                const target = e.target as HTMLInputElement;
-                enterPassManager(target.value);
-              }
-            }}
-          ></input>
-          <button
-            onClick={() => {
-              const password = document.getElementById(
-                "pass"
-              ) as HTMLInputElement;
-              enterPassManager(password.value);
-            }}
-          >
-            Enter
-          </button>
-          <p>
-            show password:
-            <input
-              type="checkbox"
-              onClick={() => {
-                showPassword("pass");
-              }}
-            />
-          </p>
-          {wrong_pass && <h3 style={{ color: "red" }}>Wrong Password!</h3>}
-        </>
-      );
+      <InsertPassword 
+      userPassRef={userPassRef}
+      setState={setState}
+      />)
     },
 
     manage: () => {
@@ -246,24 +129,24 @@ function ManagePasswords() {
 
           <div className="passwords-list">
             {decryptedPasswords
-            .filter(p => p.is_deleted === "false")
-            .map((p) => (
-              <div className="list-element" key={p.id}>
-                <p className="site" style={{ textAlign: "center" }}>
-                  <b>{p.site}</b>
-                </p>
-                <p className="comments">{p.comments}</p>
-                <button
-                  style={{ margin: "0 auto", marginTop: "10px" }}
-                  onClick={() => {
-                    setEditRecordId(p.id);
-                    setState("edit_record");
-                  }}
-                >
-                  Open
-                </button>
-              </div>
-            ))}
+              .filter((p) => p.is_deleted === "false")
+              .map((p) => (
+                <div className="list-element" key={p.id}>
+                  <p className="site" style={{ textAlign: "center" }}>
+                    <b>{p.site}</b>
+                  </p>
+                  <p className="comments">{p.comments}</p>
+                  <button
+                    style={{ margin: "0 auto", marginTop: "10px" }}
+                    onClick={() => {
+                      setEditRecordId(p.id);
+                      setState("edit_record");
+                    }}
+                  >
+                    Open
+                  </button>
+                </div>
+              ))}
           </div>
         </>
       );
