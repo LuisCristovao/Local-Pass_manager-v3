@@ -26,6 +26,13 @@ const PassRecord: React.FC<PassRecordProps> = ({
 
   const [isHoverSubmitButton, setIsHoverSubmitButton] = useState(false);
 
+
+
+
+
+
+  
+
   const copyInputValue = async (inputId: string) => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
     if (!input) {
@@ -187,6 +194,20 @@ const PassRecord: React.FC<PassRecordProps> = ({
       input.target.value = RandomPass(length);
     }
   }
+  const formatTimestamp = (timestamp: string | number): string => {
+    const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+    const date = new Date(ts);
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+  
 
   //obtain data for the edit
   let data;
@@ -203,14 +224,24 @@ const PassRecord: React.FC<PassRecordProps> = ({
   return edit ? (
     <>
       <div className="details-container">
-        <button
-          className="back-button"
-          onClick={() => {
-            setState("manage");
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
           }}
         >
-          &lt;
-        </button>
+          <button
+            className="back-button"
+            onClick={() => {
+              setState("manage");
+            }}
+          >
+            &lt;
+          </button>
+          <p style={{ margin: 0 }}>{formatTimestamp(data.timestamp)}</p>
+        </div>
 
         <div className="entry-box">
           <input
