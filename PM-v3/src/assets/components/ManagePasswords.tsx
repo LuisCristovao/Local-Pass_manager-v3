@@ -21,6 +21,8 @@ function ManagePasswords() {
   const navigate = useNavigate();
 
   const decryptAllPasswords = async () => {
+    const start = performance.now(); // Start timing
+  
     const data = await DB.load(); // <-- freshly loaded passwords
 
     const decrypted = await Promise.all(
@@ -35,9 +37,16 @@ function ManagePasswords() {
         is_deleted: await Crypto.decrypt(p.is_deleted, userPassRef.current),
       }))
     );
+  
     storedPasswords.current = decrypted;
     setDecryptedPasswords(decrypted);
+  
+    const end = performance.now(); // End timing
+    const duration = end - start;
+    console.log(`Decryption completed in ${duration > 1000 ? (duration / 1000).toFixed(2) + 's' : duration.toFixed(2) + ' ms'}`);
   };
+  
+  
 
   //decrypt passwords in manage state
   useEffect(() => {
