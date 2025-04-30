@@ -13,18 +13,28 @@ const dbPromise = openDB(DB_NAME, 1, {
 });
 
 // Add a new record (auto-generates UUID if none is provided)
-export async function add(record: Record<string, any>,password:string): Promise<string> {
+export async function add(
+  record: Record<string, any>,
+  password: string = ""
+): Promise<string> {
   const db = await dbPromise;
 
   if (!record.id) {
     record.id = crypto.randomUUID();
   }
-  const encrypted_data=await Crypto.encrypt(JSON.stringify(record),password)
+  if (password !== "") {
+    const encrypted_data = await Crypto.encrypt(
+      JSON.stringify(record),
+      password
+    );
 
-  await db.add(STORE_NAME, {
-    id: record.id,           // ✅ Key path
-    data: encrypted_data // ✅ Encrypted data
-  });
+    await db.add(STORE_NAME, {
+      id: record.id, // ✅ Key path
+      data: encrypted_data, // ✅ Encrypted data
+    });
+  }else{// already encrypted
+    await db.add(STORE_NAME,record)
+  }
 
   return record.id;
 }
@@ -39,7 +49,7 @@ export async function load(): Promise<Record<string, any>[]> {
 export async function update(
   id: string,
   newData: Record<string, any>,
-  password:string
+  password: string
 ): Promise<void> {
   const db = await dbPromise;
 
@@ -47,11 +57,14 @@ export async function update(
   if (!existing) {
     throw new Error(`Update failed: No record found with ID "${id}".`);
   }
-  const encrypted_data=await Crypto.encrypt(JSON.stringify(newData),password)
+  const encrypted_data = await Crypto.encrypt(
+    JSON.stringify(newData),
+    password
+  );
 
   await db.put(STORE_NAME, {
-    id:id,
-    data:encrypted_data
+    id: id,
+    data: encrypted_data,
   });
 }
 
@@ -103,8 +116,6 @@ export async function databaseExists(): Promise<boolean> {
     };
   });
 }
-
-
 
 // ONLY for development/debugging
 // if (typeof window !== "undefined") {
