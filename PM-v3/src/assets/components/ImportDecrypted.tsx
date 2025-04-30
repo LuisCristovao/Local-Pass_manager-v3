@@ -51,7 +51,7 @@ function ImportDecrypted() {
 
     const result = await Promise.all(
       lines.map(async (line) => {
-        const values = line.split("\t").map((v) => v.trim());
+        const values = line.split("\t").map((v) => {return v.trim().replace(/\\n/g, "\n")});
 
         // Encrypt each value using the provided password
         const encryptedSite = await Crypto.encrypt(values[0] || "", password);
