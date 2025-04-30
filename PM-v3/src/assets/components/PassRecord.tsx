@@ -162,13 +162,13 @@ const PassRecord: React.FC<PassRecordProps> = ({
         user: "",
         pass: "",
         comments: "",
-        timestamp: await Crypto.encrypt(Date.now().toString(), password),
+        timestamp: Date.now().toString(),
         sync: await Crypto.sha256(
           "".concat(site).concat(user).concat(pass).concat(comments)
         ),
-        is_deleted: await Crypto.encrypt("true", password),
+        is_deleted: "true",
       };
-      await DB.update(id, input_data);
+      await DB.update(id, input_data,password);
       //complet delete
       //await DB.remove(id);
       setState("manage");
