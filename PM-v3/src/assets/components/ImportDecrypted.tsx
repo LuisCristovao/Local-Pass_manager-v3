@@ -36,14 +36,13 @@ function ImportDecrypted() {
    *
    * @param csv - The CSV input string
    * @param delimiter - The delimiter between fields
-   * @param password - The password used for encrypting each field
+   
    * @returns A Promise resolving to an array of encrypted objects
    */
   const csvToJson = async (
     csv: string,
-    delimiter: string,
-    password: string
-  ): Promise<object[]> => {
+    delimiter: string
+  ): Promise<any[]> => {
     const normalizedCsv =
       delimiter !== "\t" ? replaceAll(csv, delimiter, "\t") : csv;
 
@@ -51,28 +50,26 @@ function ImportDecrypted() {
 
     const result = await Promise.all(
       lines.map(async (line) => {
-        const values = line.split("\t").map((v) => {return v.trim().replace(/\\n/g, "\n")});
-
-        // Encrypt each value using the provided password
-        const encryptedSite = await Crypto.encrypt(values[0] || "", password);
-        const encryptedUser = await Crypto.encrypt(values[1] || "", password);
-        const encryptedPass = await Crypto.encrypt(values[2] || "", password);
-        const encryptedComments = await Crypto.encrypt(
-          values[3] || "",
-          password
-        );
-
-        return {
-          site: encryptedSite,
-          user: encryptedUser,
-          pass: encryptedPass,
-          comments: encryptedComments,
-          timestamp: await Crypto.encrypt(Date.now().toString(), password),
-          sync: await Crypto.sha256(
-            "".concat(values[0]||"").concat(values[1]||"").concat(values[2]||"").concat(values[3]||"")
-          ),
-          is_deleted: await Crypto.encrypt("false", password),
+        const values = line
+          .split("\t")
+          .map((v) => v.trim().replace(/\\n/g, "\n"));
+  
+        const plainObject = {
+          site: values[0] || "",
+          user: values[1] || "",
+          pass: values[2] || "",
+          comments: values[3] || "",
+          timestamp: Date.now().toString(),
+          is_deleted: "false",
+          sync:""
         };
+  
+        plainObject.sync = await Crypto.sha256(
+          plainObject.site + plainObject.user + plainObject.pass + plainObject.comments
+        );
+  
+        // const encrypted = await Crypto.encrypt(JSON.stringify(plainObject), password);
+        return plainObject;
       })
     );
 
@@ -84,17 +81,16 @@ function ImportDecrypted() {
       "spliting character"
     ) as HTMLInputElement;
     if (raw_data !== "") {
-      const json_data = csvToJson(
+      const json_data = await csvToJson(
         raw_data,
-        delimiter.value,
-        userPassRef.current
+        delimiter.value
       );
-      const encrypted_data_json: any[] = await json_data;
+      
       //clear db then append  records
       try {
         DB.clearDatabase();
-        encrypted_data_json.forEach((record) => {
-          DB.add(record);
+        json_data.forEach((record) => {
+          DB.add(record,userPassRef.current);
         });
 
         return "success";
@@ -113,16 +109,16 @@ function ImportDecrypted() {
     ) as HTMLInputElement;
 
     if (raw_data !== "") {
-      const json_data = csvToJson(
+      const json_data = await csvToJson(
         raw_data,
         delimiter.value,
-        userPassRef.current
+        
       );
-      const encrypted_data_json: any[] = await json_data
+      
       //append to the db the records
       try {
-        encrypted_data_json.forEach((record) => {
-          DB.add(record);
+        json_data.forEach((record) => {
+          DB.add(record,userPassRef.current);
         });
         return "success";
       } catch (err) {

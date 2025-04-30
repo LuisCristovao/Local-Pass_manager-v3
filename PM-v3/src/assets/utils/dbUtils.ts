@@ -1,4 +1,5 @@
 import { openDB, deleteDB } from "idb";
+import * as Crypto from "./cryptoUtils";
 
 const DB_NAME = "PM_DB";
 const STORE_NAME = "records";
@@ -12,14 +13,19 @@ const dbPromise = openDB(DB_NAME, 1, {
 });
 
 // Add a new record (auto-generates UUID if none is provided)
-export async function add(record: Record<string, any>): Promise<string> {
+export async function add(record: Record<string, any>,password:string): Promise<string> {
   const db = await dbPromise;
 
   if (!record.id) {
     record.id = crypto.randomUUID();
   }
+  const encrypted_data=await Crypto.encrypt(JSON.stringify(record),password)
 
-  await db.add(STORE_NAME, record);
+  await db.add(STORE_NAME, {
+    id: record.id,           // ✅ Key path
+    data: encrypted_data // ✅ Encrypted data
+  });
+  
   return record.id;
 }
 

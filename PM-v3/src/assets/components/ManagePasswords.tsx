@@ -28,18 +28,33 @@ function ManagePasswords() {
     const decrypted = await Promise.all(
       data.map(async (p) => ({
         id: p.id,
-        site: await Crypto.decrypt(p.site, userPassRef.current),
-        user: await Crypto.decrypt(p.user, userPassRef.current),
-        pass: await Crypto.decrypt(p.pass, userPassRef.current),
-        comments: await Crypto.decrypt(p.comments, userPassRef.current),
-        timestamp: await Crypto.decrypt(p.timestamp, userPassRef.current),
-        sync: p.sync,
-        is_deleted: await Crypto.decrypt(p.is_deleted, userPassRef.current),
+        data: await Crypto.decrypt(p.data, userPassRef.current),
       }))
     );
-  
-    storedPasswords.current = decrypted;
-    setDecryptedPasswords(decrypted);
+    const decrypt_json=decrypted.map(el=>{
+      const info:{
+        site:string,
+        user:string,
+        pass:string,
+        comments:string,
+        timestamp:string,
+        sync:string,
+        is_deleted:string
+      }= JSON.parse(el.data || "")
+      return {
+        id:el.id,
+        site:info.site,
+        user:info.user,
+        pass:info.pass,
+        comments:info.comments,
+        timestamp:info.timestamp,
+        sync:info.sync,
+        is_deleted:info.is_deleted
+      }
+
+    })
+    storedPasswords.current = decrypt_json;
+    setDecryptedPasswords(decrypt_json);
   
     const end = performance.now(); // End timing
     const duration = end - start;

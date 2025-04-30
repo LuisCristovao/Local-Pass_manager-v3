@@ -37,7 +37,7 @@ const InsertPassword: React.FC<InsertPassword> = ({
     userPassRef.current = password;
 
     const canAccess = await Crypto.canDecrypt(
-      passwords[0].timestamp,
+      passwords[0].data,
       userPassRef.current
     );
 
