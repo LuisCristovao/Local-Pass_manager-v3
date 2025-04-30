@@ -167,7 +167,7 @@ function ImportDecrypted() {
         <input
           id="spliting character"
           type="text"
-          value="\t"
+          defaultValue="\t"
           style={{ width: "20px" }}
         />
       </p>
