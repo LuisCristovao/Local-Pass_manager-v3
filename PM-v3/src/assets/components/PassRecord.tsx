@@ -102,20 +102,20 @@ const PassRecord: React.FC<PassRecordProps> = ({
     }
 
     const input_data = {
-      site: await Crypto.encrypt(site, password),
-      user: await Crypto.encrypt(user, password),
-      pass: await Crypto.encrypt(pass, password),
-      comments: await Crypto.encrypt(comments, password),
-      timestamp: await Crypto.encrypt(Date.now().toString(), password),
+      site: site,
+      user: user,
+      pass: pass,
+      comments: comments,
+      timestamp: Date.now().toString(),
       sync: await Crypto.sha256(
         "".concat(site).concat(user).concat(pass).concat(comments)
       ),
-      is_deleted: await Crypto.encrypt("false", password),
+      is_deleted: "false",
     };
 
     // You could now store input_data into IndexedDB, etc.
     if (id === "") {
-      await DB.add(input_data);
+      await DB.add(input_data,password);
       setSubmitButtonText2(() => {
         setTimeout(() => {
           setSubmitButtonText2("Submit");
@@ -124,7 +124,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
       });
       setState("manage");
     } else {
-      await DB.update(id, input_data);
+      await DB.update(id, input_data,password);
       setSubmitButtonText(() => {
         setTimeout(() => {
           setSubmitButtonText("Edit");

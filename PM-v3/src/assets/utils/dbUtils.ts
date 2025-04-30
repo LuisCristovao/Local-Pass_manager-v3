@@ -25,7 +25,7 @@ export async function add(record: Record<string, any>,password:string): Promise<
     id: record.id,           // ✅ Key path
     data: encrypted_data // ✅ Encrypted data
   });
-  
+
   return record.id;
 }
 
@@ -38,7 +38,8 @@ export async function load(): Promise<Record<string, any>[]> {
 // Update a record by ID (throws error if ID not found)
 export async function update(
   id: string,
-  newData: Record<string, any>
+  newData: Record<string, any>,
+  password:string
 ): Promise<void> {
   const db = await dbPromise;
 
@@ -46,14 +47,12 @@ export async function update(
   if (!existing) {
     throw new Error(`Update failed: No record found with ID "${id}".`);
   }
+  const encrypted_data=await Crypto.encrypt(JSON.stringify(newData),password)
 
-  const updatedRecord = {
-    ...existing,
-    ...newData,
-    id, // keep the original ID intact
-  };
-
-  await db.put(STORE_NAME, updatedRecord);
+  await db.put(STORE_NAME, {
+    id:id,
+    data:encrypted_data
+  });
 }
 
 // Remove a record by ID (throws error if ID not found)
