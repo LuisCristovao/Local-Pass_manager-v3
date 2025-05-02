@@ -139,6 +139,7 @@ function App() {
         text: "Export Decrypted DB",
         onclick: () => {
           //change page
+          navigate("/exportD")
         },
       },
     ],
