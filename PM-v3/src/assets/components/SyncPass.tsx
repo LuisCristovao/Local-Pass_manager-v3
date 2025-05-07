@@ -11,8 +11,49 @@ function SyncPass() {
   const remotePeerId: any = useRef(null);
   const peer: any = useRef(null);
   const userPassRef = useRef("");
+  const otherDB:any=useRef([])
 
   const navigate = useNavigate();
+
+  const decryptDB= async (encrypted_db:any[])=>{
+    if(encrypted_db.length==0){
+        return []
+    }
+    const decrypted = await Promise.all(
+        encrypted_db.map(async (p:any) => ({
+            id: p.id,
+            data: await Crypto.decrypt(p.data, userPassRef.current),
+          }))
+        );
+    const decrypt_json=decrypted.map(el=>{
+        const info:{
+          site:string,
+          user:string,
+          pass:string,
+          comments:string,
+          timestamp:string,
+          sync:string,
+          is_deleted:string
+        }= JSON.parse(el.data || "")
+        return {
+          id:el.id,
+          site:info.site,
+          user:info.user,
+          pass:info.pass,
+          comments:info.comments,
+          timestamp:info.timestamp,
+          sync:info.sync,
+          is_deleted:info.is_deleted
+        }
+  
+      })
+      return decrypt_json
+
+
+  }  
+
+
+
   const connect = () => {
     const input = document.getElementById("remoteId") as HTMLInputElement;
     remotePeerId.current = input.value;
@@ -20,13 +61,37 @@ function SyncPass() {
     conn.on("open", async () => {
       console.log("Connected to peer:", remotePeerId.current);
       const data = await DB.load()  
-      conn.send({ type: "msg", data: data }); // Fixed typo here
+      conn.send({ type: "msg", data: data }); 
     });
     conn.on("data", (data: any) => {
       console.log(data);
+      otherDB.current=data.data
+      syncDB()
       setState("connected");
     });
   };
+  const syncDB= async ()=>{
+    const ourDB= await DB.load()
+    if(ourDB.length==0 || otherDB.current.length==0){
+        if(ourDB.length==0 && otherDB.current.length>0){
+            DB.replaceAllRecords(otherDB.current)
+        }
+        //other options are not required
+        
+    }else{
+        //decrypt both DB to loop through each
+        const ourDB_decrypted=await decryptDB(ourDB)
+        const otherDB_decrypted=await decryptDB(otherDB.current)
+
+        ourDB_decrypted.forEach(ourRecord => {
+            otherDB_decrypted.forEach(otherRecord => {
+              // Do something with item1 and item2
+              console.log(ourRecord, otherRecord);
+            });
+          });
+        
+    }
+  }
 
   // Initialize PeerJS and handle connections
   useEffect(() => {
@@ -46,6 +111,8 @@ function SyncPass() {
       });
       conn.on("data", (data: any) => {
         console.log(data);
+        otherDB.current=data.data
+        syncDB()
         setState("connected");
       });
     });
