@@ -76,6 +76,7 @@ function App() {
         text: "Sync Passwords",
         onclick: () => {
           //go to sync page
+          navigate("/syncPass")
         },
       },
       

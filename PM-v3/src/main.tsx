@@ -7,7 +7,8 @@ import { HashRouter, Routes, Route } from 'react-router-dom'; // Add Routes and 
 import ManagePasswords from './assets/components/ManagePasswords.tsx'; // Import the new ManagePasswords component
 import ImportEncrypted from './assets/components/ImportEncrypted.tsx'; // Import the new ImportEncrypted component
 import ImportDecrypted from './assets/components/ImportDecrypted.tsx'; // Import the new ImportEncrypted component
-import ExportDecrypted from './assets/components/exportDecrypt.tsx';
+import ExportDecrypted from './assets/components/ExportDecrypt.tsx';
+import SyncPass from './assets/components/SyncPass.tsx';
 
 
 createRoot(document.getElementById('root')!).render(
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/importE" element={<ImportEncrypted />} />
         <Route path="/importD" element={<ImportDecrypted />} />
         <Route path="/exportD" element={<ExportDecrypted />} />
+        <Route path="/syncPass" element={<SyncPass />} />
       </Routes>
     </HashRouter>
   /*</StrictMode>,*/
