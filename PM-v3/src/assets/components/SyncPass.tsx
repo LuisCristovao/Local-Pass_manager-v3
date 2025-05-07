@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
+import InsertPassword from "./InsertPassword";
 
 function SyncPass() {
+  const [state, setState] = useState("intro");
   const peerId: any = useRef(null);
-  const remotePeerId:any = useRef(null);
+  const remotePeerId: any = useRef(null);
   const peer: any = useRef(null);
+  const userPassRef = useRef("");
 
   const navigate = useNavigate();
   const connect = () => {
     const input = document.getElementById("remoteId") as HTMLInputElement;
-    remotePeerId.current=input.value
+    remotePeerId.current = input.value;
     const conn = peer.current.connect(remotePeerId.current);
     conn.on("open", () => {
       console.log("Connected to peer:", remotePeerId.current);
@@ -19,6 +22,7 @@ function SyncPass() {
     });
     conn.on("data", (data: any) => {
       console.log(data);
+      setState("connected");
     });
   };
 
@@ -34,10 +38,12 @@ function SyncPass() {
     peer.current.on("connection", (conn: any) => {
       conn.on("open", () => {
         console.log("Incoming connection from:", conn.peer);
+        remotePeerId.current = conn.peer;
         conn.send({ type: "msg", data: `Hi my name is ${peerId.current}` }); // Fixed typo here
       });
       conn.on("data", (data: any) => {
         console.log(data);
+        setState("connected");
       });
     });
 
@@ -46,7 +52,9 @@ function SyncPass() {
     };
   }, []);
 
-  return (
+  return state === "intro" ? (
+    <InsertPassword userPassRef={userPassRef} setState={setState} />
+  ) : state === "manage" ? (
     <>
       <button
         style={{ position: "absolute", top: "10px", left: "10px" }}
@@ -54,8 +62,9 @@ function SyncPass() {
       >
         Go back
       </button>
-      <h2>Sync ID</h2>
-      <input id="remoteId" type="text" />
+      <h2 style={{ margin: "10px" }}>Sync ID: </h2>
+      <p style={{ fontSize: "large", userSelect: "auto" }}>{peerId.current}</p>
+      <input id="remoteId" type="text" placeholder="Insert remote sync ID" />
       <button
         style={{ marginTop: "20px" }}
         onClick={() => {
@@ -65,6 +74,20 @@ function SyncPass() {
         Connect
       </button>
     </>
+  ) : (
+    state === "connected" && (
+      <>
+        <button
+          style={{ position: "absolute", top: "10px", left: "10px" }}
+          onClick={() => navigate("/")}
+        >
+          Go back
+        </button>
+        <h2>
+          Connected with: <p>{remotePeerId.current}</p>
+        </h2>
+      </>
+    )
   );
 }
 
