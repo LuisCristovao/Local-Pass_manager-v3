@@ -117,6 +117,22 @@ export async function databaseExists(): Promise<boolean> {
   });
 }
 
+
+// Replace all records with the new records provided
+export async function replaceAllRecords(
+  newRecords: Record<string, any>[],
+  password: string = ""
+): Promise<void> {
+  // Clear the existing records using the existing clearDatabase function
+  await clearDatabase();
+
+  // Add the new records using the existing add function
+  for (const record of newRecords) {
+    await add(record, password);
+  }
+}
+
+
 // ONLY for development/debugging
 // if (typeof window !== "undefined") {
 //   (window as any).DB = { add, load, update, remove };
