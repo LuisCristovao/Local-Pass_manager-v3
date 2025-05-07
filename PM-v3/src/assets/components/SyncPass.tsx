@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import InsertPassword from "./InsertPassword";
+import * as DB from "../utils/dbUtils";
+import * as Crypto from "../utils/cryptoUtils";
 
 function SyncPass() {
   const [state, setState] = useState("intro");
@@ -15,10 +17,10 @@ function SyncPass() {
     const input = document.getElementById("remoteId") as HTMLInputElement;
     remotePeerId.current = input.value;
     const conn = peer.current.connect(remotePeerId.current);
-    conn.on("open", () => {
+    conn.on("open", async () => {
       console.log("Connected to peer:", remotePeerId.current);
-
-      conn.send({ type: "msg", data: `Hi my name is ${peerId.current}` }); // Fixed typo here
+      const data = await DB.load()  
+      conn.send({ type: "msg", data: data }); // Fixed typo here
     });
     conn.on("data", (data: any) => {
       console.log(data);
@@ -36,10 +38,11 @@ function SyncPass() {
     });
 
     peer.current.on("connection", (conn: any) => {
-      conn.on("open", () => {
+      conn.on("open", async () => {
         console.log("Incoming connection from:", conn.peer);
         remotePeerId.current = conn.peer;
-        conn.send({ type: "msg", data: `Hi my name is ${peerId.current}` }); // Fixed typo here
+        const data = await DB.load()
+        conn.send({ type: "msg", data: data }); // Fixed typo here
       });
       conn.on("data", (data: any) => {
         console.log(data);
