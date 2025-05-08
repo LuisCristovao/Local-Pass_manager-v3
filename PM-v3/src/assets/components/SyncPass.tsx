@@ -7,7 +7,7 @@ import * as Crypto from "../utils/cryptoUtils";
 
 function SyncPass() {
   const [state, setState] = useState("intro");
-  const peerId: any = useRef(null);
+  const [peerId,setPeerId]: any = useState(null);
   const remotePeerId: any = useRef(null);
   const peer: any = useRef(null);
   const userPassRef = useRef("");
@@ -140,10 +140,23 @@ function SyncPass() {
 
   // Initialize PeerJS and handle connections
   useEffect(() => {
+
+    const checkDatabase = async () => {
+      const dbExists = await DB.load();
+      if (dbExists.length>0) {
+        setState("intro");
+      } else {
+        setState("manage");
+      }
+    };
+
+    
+
+
     peer.current = new Peer();
 
     peer.current.on("open", (id: string) => {
-      peerId.current = id;
+      setPeerId( id);
       console.log("My peer ID is: " + id);
     });
 
@@ -162,48 +175,144 @@ function SyncPass() {
       });
     });
 
+    checkDatabase(); // Call the async function on component mount
+
     return () => {
       peer.current.destroy();
     };
   }, []);
 
-  return state === "intro" ? (
-    <InsertPassword userPassRef={userPassRef} setState={setState} />
-  ) : state === "manage" ? (
-    <>
-      <button
-        style={{ position: "absolute", top: "10px", left: "10px" }}
-        onClick={() => navigate("/")}
-      >
-        Go back
-      </button>
-      <h2 style={{ margin: "10px" }}>Sync ID: </h2>
-      <p style={{ fontSize: "large", userSelect: "auto" }}>{peerId.current}</p>
-      <input id="remoteId" type="text" placeholder="Insert remote sync ID" />
-      <button
-        style={{ marginTop: "20px" }}
-        onClick={() => {
-          connect();
-        }}
-      >
-        Connect
-      </button>
-    </>
-  ) : (
-    state === "connected" && (
-      <>
-        <button
-          style={{ position: "absolute", top: "10px", left: "10px" }}
-          onClick={() => navigate("/")}
-        >
-          Go back
-        </button>
-        <h2>
-          Connected with: <p>{remotePeerId.current}</p>
-        </h2>
-      </>
-    )
-  );
+
+  const page_states:any = {
+      loading:()=>{
+        return <p>Loading...</p>
+      },
+      intro: () => {
+        return <InsertPassword userPassRef={userPassRef} setState={setState} />;
+      },
+      manage: () => {
+        return (
+          <>
+            <button
+              style={{ position: "absolute", top: "10px", left: "10px" }}
+              onClick={() => navigate("/")}
+            >
+              Go back
+            </button>
+            <h2 style={{ margin: "10px" }}>Sync ID: </h2>
+            <p style={{ fontSize: "large", userSelect: "auto" }}>
+              {peerId}
+            </p>
+            <input
+              id="remoteId"
+              type="text"
+              placeholder="Insert remote sync ID"
+            />
+            <button
+              style={{ marginTop: "20px" }}
+              onClick={() => {
+                connect();
+              }}
+            >
+              Connect
+            </button>
+          </>
+        );
+      },
+      manual_input: () => {
+        return (
+          <>
+            <button
+              style={{ position: "absolute", top: "10px", left: "10px" }}
+              onClick={() => navigate("/")}
+            >
+              Go back
+            </button>
+            <h2 style={{ margin: "10px" }}>Sync ID: </h2>
+            <p style={{ fontSize: "large", userSelect: "auto" }}>
+              {peerId}
+            </p>
+            <input
+              id="remoteId"
+              type="text"
+              placeholder="Insert remote sync ID"
+            />
+            <button
+              style={{ marginTop: "20px" }}
+              onClick={() => {
+                connect();
+              }}
+            >
+              Connect
+            </button>
+          </>
+        );
+      },
+      connected: () => {
+        return (
+          <>
+            <button
+              style={{ position: "absolute", top: "10px", left: "10px" }}
+              onClick={() => navigate("/")}
+            >
+              Go back
+            </button>
+            <h2>ID: {peerId}</h2>
+            <h2>
+              Success Sync with: <br/> <p>{remotePeerId.current}</p>
+            </h2>
+            <button
+            onClick={()=>{
+              setState("manage")
+            }}
+            >Sync Again</button>
+          </>
+        );
+      },
+    };
+
+
+
+    return page_states[state]()
+
+
+  // return state === "intro" ? (
+  //   <InsertPassword userPassRef={userPassRef} setState={setState} />
+  // ) : state === "manage" ? (
+  //   <>
+  //     <button
+  //       style={{ position: "absolute", top: "10px", left: "10px" }}
+  //       onClick={() => navigate("/")}
+  //     >
+  //       Go back
+  //     </button>
+  //     <h2 style={{ margin: "10px" }}>Sync ID: </h2>
+  //     <p style={{ fontSize: "large", userSelect: "auto" }}>{peerId.current}</p>
+  //     <input id="remoteId" type="text" placeholder="Insert remote sync ID" />
+  //     <button
+  //       style={{ marginTop: "20px" }}
+  //       onClick={() => {
+  //         connect();
+  //       }}
+  //     >
+  //       Connect
+  //     </button>
+  //   </>
+  // ) : (
+  //   state === "connected" && (
+  //     <>
+  //       <button
+  //         style={{ position: "absolute", top: "10px", left: "10px" }}
+  //         onClick={() => navigate("/")}
+  //       >
+  //         Go back
+  //       </button>
+  //       <h2>
+  //         Connected with: <p>{remotePeerId.current}</p>
+  //       </h2>
+  //     </>
+  //   )
+  // );
 }
 
 export default SyncPass;
