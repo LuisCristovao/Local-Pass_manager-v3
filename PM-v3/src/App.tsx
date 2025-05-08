@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"; // Add this import
 import "./App.css";
 import { useRef, useState } from "react";
 import * as DB from "./assets/utils/dbUtils";
-import * as Crypto from "./assets/utils/cryptoUtils";
+// import * as Crypto from "./assets/utils/cryptoUtils";
 // import ManagePasswords from "./assets/components/ManagePasswords";
 
 function App() {
@@ -12,18 +12,18 @@ function App() {
   const historyRef = useRef(["main"]);
 
 
-  function copyToClipboard(text: string) {
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          console.log("Text copied to clipboard");
-        })
-        .catch((err) => {
-          console.error("Failed to copy text: ", err);
-        });
-    }
-  }
+  // function copyToClipboard(text: string) {
+  //   if (navigator.clipboard) {
+  //     navigator.clipboard
+  //       .writeText(text)
+  //       .then(() => {
+  //         console.log("Text copied to clipboard");
+  //       })
+  //       .catch((err) => {
+  //         console.error("Failed to copy text: ", err);
+  //       });
+  //   }
+  // }
 
   const downloadJsonAsFile = (jsonContent: {}, fileName: string) => {
     // Create a Blob containing the JSON content

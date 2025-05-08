@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import {  useState, useRef } from "react";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 import { useNavigate } from "react-router-dom"; // Add this import
@@ -36,13 +36,13 @@ function ExportDecrypted() {
     // Optionally revoke the Blob URL after simulating the download
     URL.revokeObjectURL(blobUrl);
   };
-  const replaceAll = (
-    str: string,
-    search: string,
-    replacement: string
-  ): string => {
-    return str.split(search).join(replacement);
-  };
+  // const replaceAll = (
+  //   str: string,
+  //   search: string,
+  //   replacement: string
+  // ): string => {
+  //   return str.split(search).join(replacement);
+  // };
 
   function downloadCSV(jsonData: {}, filename = "data.csv") {
     const csv = jsonToCSV(jsonData);
