@@ -89,6 +89,7 @@ function SyncPass() {
       
           if (ourRecord.sync === otherRecord.sync) {
             exist_same_record = ourIndex;
+            break;
           }
         }
       
@@ -96,6 +97,10 @@ function SyncPass() {
           if (ourDB_decrypted[exist_same_record].timestamp < otherRecord.timestamp) {
             // Insert your logic for replacing with the most recent here
             syncDB[exist_same_record] = otherDB.current[otherIndex];
+          }
+          else if( ourDB_decrypted[exist_same_record].is_deleted==="true" && ourDB_decrypted[exist_same_record].is_deleted === otherRecord.is_deleted ){
+            //same sync and timestamp and is_deleted flag is true and equal on both sides than delete 
+            syncDB.splice(exist_same_record,1)
           }
         } else {//new record or update record
           const new_record = otherDB_decrypted[otherIndex];
