@@ -79,50 +79,60 @@ function SyncPass() {
       const syncDB = [...ourDB];
       let otherIndex;
 
-      for (otherIndex = 0; otherIndex < otherDB_decrypted.length; otherIndex++) {
+      for (
+        otherIndex = 0;
+        otherIndex < otherDB_decrypted.length;
+        otherIndex++
+      ) {
         const otherRecord = otherDB_decrypted[otherIndex];
         let exist_same_record = -1;
         let ourIndex;
-      
+
         for (ourIndex = 0; ourIndex < ourDB_decrypted.length; ourIndex++) {
           const ourRecord = ourDB_decrypted[ourIndex];
-      
+
           if (ourRecord.sync === otherRecord.sync) {
             exist_same_record = ourIndex;
             break;
           }
         }
-      
-        if (exist_same_record > -1) {// sync hash already exists in ourDB
-          if (ourDB_decrypted[exist_same_record].timestamp < otherRecord.timestamp) {
+
+        if (exist_same_record > -1) {
+          // sync hash already exists in ourDB
+          if (
+            ourDB_decrypted[exist_same_record].timestamp < otherRecord.timestamp
+          ) {
             // Insert your logic for replacing with the most recent here
             syncDB[exist_same_record] = otherDB.current[otherIndex];
+          } else if (
+            ourDB_decrypted[exist_same_record].is_deleted === "true" &&
+            ourDB_decrypted[exist_same_record].is_deleted ===
+              otherRecord.is_deleted
+          ) {
+            //same sync and timestamp and is_deleted flag is true and equal on both sides than delete
+            syncDB.splice(exist_same_record, 1);
           }
-          else if( ourDB_decrypted[exist_same_record].is_deleted==="true" && ourDB_decrypted[exist_same_record].is_deleted === otherRecord.is_deleted ){
-            //same sync and timestamp and is_deleted flag is true and equal on both sides than delete 
-            syncDB.splice(exist_same_record,1)
-          }
-        } else {//new record or update record
+        } else {
+          //new record or update record
           const new_record = otherDB_decrypted[otherIndex];
           //if id already exists it must be an update record
-          const found_index=ourDB_decrypted.findIndex(item => item.id===new_record.id)
-          if(found_index>-1){
+          const found_index = ourDB_decrypted.findIndex(
+            (item) => item.id === new_record.id
+          );
+          if (found_index > -1) {
             // need to update by the most recent
-            if(new_record.timestamp>ourDB_decrypted[found_index].timestamp){
-                syncDB[found_index]=otherDB.current[otherIndex]
-            }else {
-                //skip because already have must recent record
+            if (new_record.timestamp > ourDB_decrypted[found_index].timestamp) {
+              syncDB[found_index] = otherDB.current[otherIndex];
+            } else {
+              //skip because already have must recent record
             }
-
-          }else{
+          } else {
             //need to add to db
-            const to_add_record=otherDB.current[otherIndex]
+            const to_add_record = otherDB.current[otherIndex];
             syncDB.push(to_add_record);
           }
-          
         }
       }
-      
 
       await DB.replaceAllRecords(syncDB);
     }
