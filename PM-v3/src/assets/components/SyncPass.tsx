@@ -92,15 +92,29 @@ function SyncPass() {
           }
         }
       
-        if (exist_same_record > -1) {
+        if (exist_same_record > -1) {// sync hash already exists in ourDB
           if (ourDB_decrypted[exist_same_record].timestamp < otherRecord.timestamp) {
             // Insert your logic for replacing with the most recent here
             syncDB[exist_same_record] = otherDB.current[otherIndex];
           }
-        } else {
-          const new_record = otherDB.current[otherIndex];
-          new_record.id = crypto.randomUUID();
-          syncDB.push(new_record);
+        } else {//new record or update record
+          const new_record = otherDB_decrypted[otherIndex];
+          //if id already exists it must be an update record
+          const found_index=ourDB_decrypted.findIndex(item => item.id===new_record.id)
+          if(found_index>-1){
+            // need to update by the most recent
+            if(new_record.timestamp>ourDB_decrypted[found_index].timestamp){
+                syncDB[found_index]=otherDB.current[otherIndex]
+            }else {
+                //skip because already have must recent record
+            }
+
+          }else{
+            //need to add to db
+            const to_add_record=otherDB.current[otherIndex]
+            syncDB.push(to_add_record);
+          }
+          
         }
       }
       
