@@ -10,6 +10,7 @@ import QrReader from "react-web-qr-reader";
 function SyncPass() {
   const [state, setState] = useState("intro");
   const [peerId, setPeerId]: any = useState(null);
+  const [qr_value, setQRValue]:any = useState("")
   const remotePeerId: any = useRef(null);
   const peer: any = useRef(null);
   const userPassRef = useRef("");
@@ -196,22 +197,29 @@ function SyncPass() {
     scan: () => {
       return (
         <>
+        <button
+            style={{ position: "absolute", top: "10px", left: "10px" }}
+            onClick={() => setState("manage")}
+          >
+            Go back
+          </button>
           <QrReader
             onError={(error) => {
               console.log(error);
             }}
             onScan={(result:any) => {
               if (result) {
+
                 connect( result.data)
-                console.log(result)
+                setQRValue(result.data)
               }
             }}
             style={{
               width:"300px",
-              height:"300px"
+              height:"300px",
             }}
           />
-          <p>{remotePeerId.current}</p>
+          <p>{qr_value}</p>
         </>
       );
     },
@@ -226,7 +234,10 @@ function SyncPass() {
           </button>
 
           <h2 style={{ margin: "10px" }}>Sync ID: </h2>
-          <QRCodeSVG value={peerId} size={128} />
+          <QRCodeSVG value={peerId} size={156} style={{
+            padding:"20px",
+            backgroundColor:"white"
+          }} />
           <p style={{ fontSize: "large", userSelect: "auto" }}>{peerId}</p>
 
           <button
