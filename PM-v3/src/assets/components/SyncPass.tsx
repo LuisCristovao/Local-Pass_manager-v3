@@ -5,7 +5,7 @@ import InsertPassword from "./InsertPassword";
 import * as DB from "../utils/dbUtils";
 import * as Crypto from "../utils/cryptoUtils";
 import { QRCodeSVG } from "qrcode.react";
-import { QrReader } from "react-qr-reader";
+import QrReader from "react-web-qr-reader";
 
 function SyncPass() {
   const [state, setState] = useState("intro");
@@ -51,9 +51,15 @@ function SyncPass() {
     return decrypt_json;
   };
 
-  const connect = () => {
-    const input = document.getElementById("remoteId") as HTMLInputElement;
-    remotePeerId.current = input.value;
+  const connect = (data:string="") => {
+    if(data!==""){
+      const input = document.getElementById("remoteId") as HTMLInputElement;
+      remotePeerId.current = input.value;
+    }
+    else{
+      remotePeerId.current = data;
+    }
+    
     const conn = peer.current.connect(remotePeerId.current);
     conn.on("open", async () => {
       console.log("Connected to peer:", remotePeerId.current);
@@ -191,19 +197,19 @@ function SyncPass() {
       return (
         <>
           <QrReader
-            constraints={{
-              facingMode: "environment",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
+            onError={(error) => {
+              console.log(error);
             }}
-            onResult={(result, error) => {
+            onScan={(result:any) => {
               if (result) {
-                remotePeerId.current = result.getText();
+                connect( result.data)
+                console.log(result)
               }
-              if (error) console.info(error);
             }}
-
-            //style={{ width: "100%" }}
+            style={{
+              width:"300px",
+              height:"300px"
+            }}
           />
           <p>{remotePeerId.current}</p>
         </>
