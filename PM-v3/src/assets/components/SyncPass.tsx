@@ -52,7 +52,7 @@ function SyncPass() {
   };
 
   const connect = (data:string="") => {
-    if(data!==""){
+    if(data===""){
       const input = document.getElementById("remoteId") as HTMLInputElement;
       remotePeerId.current = input.value;
     }
