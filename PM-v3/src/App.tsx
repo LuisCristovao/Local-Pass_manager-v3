@@ -100,13 +100,13 @@ function App() {
           historyRef.current = new_history;
         },
       },
-      {
-        id: "change_master_pass",
-        text: "Change master Passwords",
-        onclick: () => {
-          //go to another page
-        },
-      },
+      // {
+      //   id: "change_master_pass",
+      //   text: "Change master Passwords",
+      //   onclick: () => {
+      //     //go to another page
+      //   },
+      // },
       {
         id: "delete_db",
         text: "Delete Local Data",
