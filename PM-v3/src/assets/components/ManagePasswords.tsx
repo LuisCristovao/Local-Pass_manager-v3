@@ -9,20 +9,36 @@ import InsertPassword from "./InsertPassword";
 
 function ManagePasswords() {
   const [state, setState] = useState("intro");
-  
+
   const [decryptedPasswords, setDecryptedPasswords] = useState<
     Record<string, any>[]
   >([]);
   const userPassRef = useRef<string>(""); // default value is an empty string
   const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
+  const number_of_pass_update = useRef("");
 
   const [editRecordId, setEditRecordId] = useState("");
 
   const navigate = useNavigate();
 
+  const formatTimestamp = (timestamp: string | number): string => {
+    const ts =
+      typeof timestamp === "string" ? parseInt(timestamp, 10) : timestamp;
+    const date = new Date(ts);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
   const decryptAllPasswords = async () => {
     const start = performance.now(); // Start timing
-  
+
     const data = await DB.load(); // <-- freshly loaded passwords
 
     const decrypted = await Promise.all(
@@ -31,37 +47,50 @@ function ManagePasswords() {
         data: await Crypto.decrypt(p.data, userPassRef.current),
       }))
     );
-    const decrypt_json=decrypted.map(el=>{
-      const info:{
-        site:string,
-        user:string,
-        pass:string,
-        comments:string,
-        timestamp:string,
-        sync:string,
-        is_deleted:string
-      }= JSON.parse(el.data || "")
+    const decrypt_json = decrypted.map((el) => {
+      const info: {
+        site: string;
+        user: string;
+        pass: string;
+        comments: string;
+        timestamp: string;
+        sync: string;
+        is_deleted: string;
+      } = JSON.parse(el.data || "");
       return {
-        id:el.id,
-        site:info.site,
-        user:info.user,
-        pass:info.pass,
-        comments:info.comments,
-        timestamp:info.timestamp,
-        sync:info.sync,
-        is_deleted:info.is_deleted
-      }
+        id: el.id,
+        site: info.site,
+        user: info.user,
+        pass: info.pass,
+        comments: info.comments,
+        timestamp: info.timestamp,
+        sync: info.sync,
+        is_deleted: info.is_deleted,
+      };
+    });
+    const non_deleted_records = decrypt_json.filter(
+      (el) => el.is_deleted === "false"
+    );
+    const maxTimestampObj = non_deleted_records.reduce((max, current) => {
+      return current.timestamp > max.timestamp ? current : max;
+    }, decrypt_json[0]);
 
-    })
+    number_of_pass_update.current = `${
+      non_deleted_records.length
+    } || ${formatTimestamp(maxTimestampObj.timestamp)}`;
     storedPasswords.current = decrypt_json;
     setDecryptedPasswords(decrypt_json);
-  
+
     const end = performance.now(); // End timing
     const duration = end - start;
-    console.log(`Decryption completed in ${duration > 1000 ? (duration / 1000).toFixed(2) + 's' : duration.toFixed(2) + ' ms'}`);
+    console.log(
+      `Decryption completed in ${
+        duration > 1000
+          ? (duration / 1000).toFixed(2) + "s"
+          : duration.toFixed(2) + " ms"
+      }`
+    );
   };
-  
-  
 
   //decrypt passwords in manage state
   useEffect(() => {
@@ -105,11 +134,7 @@ function ManagePasswords() {
 
   const pages: any = {
     intro: () => {
-      return (
-      <InsertPassword 
-      userPassRef={userPassRef}
-      setState={setState}
-      />)
+      return <InsertPassword userPassRef={userPassRef} setState={setState} />;
     },
 
     manage: () => {
@@ -121,6 +146,17 @@ function ManagePasswords() {
           >
             Go back
           </button>
+          <p
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              marginTop: "7px",
+              fontSize: "large",
+            }}
+          >
+            {number_of_pass_update.current}
+          </p>
           <h1>Manage Passwords</h1>
           <input
             type="text"
