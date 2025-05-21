@@ -81,7 +81,7 @@ function ManagePasswords() {
 
   //reset to intro statge after 10 min of no input from user
   useEffect(() => {
-    if (state !== "manage") return;
+    if (state === "intro") return;
 
     let timeout: number;
 
