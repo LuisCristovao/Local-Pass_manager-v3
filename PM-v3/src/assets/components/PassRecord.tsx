@@ -26,13 +26,6 @@ const PassRecord: React.FC<PassRecordProps> = ({
 
   const [isHoverSubmitButton, setIsHoverSubmitButton] = useState(false);
 
-
-
-
-
-
-  
-
   const copyInputValue = async (inputId: string) => {
     const input = document.getElementById(inputId) as HTMLInputElement | null;
     if (!input) {
@@ -108,14 +101,14 @@ const PassRecord: React.FC<PassRecordProps> = ({
       comments: comments,
       timestamp: Date.now().toString(),
       sync: await Crypto.sha256(
-        "".concat(site).concat(user).concat(pass).concat(comments)
+        "".concat(site).concat(user).concat(pass).concat(comments),
       ),
       is_deleted: "false",
     };
 
     // You could now store input_data into IndexedDB, etc.
     if (id === "") {
-      await DB.add(input_data,password);
+      await DB.add(input_data, password);
       setSubmitButtonText2(() => {
         setTimeout(() => {
           setSubmitButtonText2("Submit");
@@ -124,7 +117,7 @@ const PassRecord: React.FC<PassRecordProps> = ({
       });
       setState("manage");
     } else {
-      await DB.update(id, input_data,password);
+      await DB.update(id, input_data, password);
       setSubmitButtonText(() => {
         setTimeout(() => {
           setSubmitButtonText("Edit");
@@ -164,11 +157,11 @@ const PassRecord: React.FC<PassRecordProps> = ({
         comments: "",
         timestamp: Date.now().toString(),
         sync: await Crypto.sha256(
-          "".concat(site).concat(user).concat(pass).concat(comments)
+          "".concat(site).concat(user).concat(pass).concat(comments),
         ),
         is_deleted: "true",
       };
-      await DB.update(id, input_data,password);
+      await DB.update(id, input_data, password);
       //complet delete
       //await DB.remove(id);
       setState("manage");
@@ -176,16 +169,23 @@ const PassRecord: React.FC<PassRecordProps> = ({
     }
   };
 
-  function RandomPass(size: number) {
-    var text = "";
-    var possible =
+  function RandomPass(size: number): string {
+    const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,()/%&$#@=[]{} ";
-
-    for (var i = 0; i < size; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    const result: string[] = [];
+    // Use rejection sampling to avoid modulo bias
+    const limit = Math.floor(256 / chars.length) * chars.length;
+    while (result.length < size) {
+      const bytes = crypto.getRandomValues(
+        new Uint8Array(size - result.length),
+      );
+      for (const byte of bytes) {
+        if (byte < limit) {
+          result.push(chars[byte % chars.length]);
+        }
+      }
     }
-
-    return text;
+    return result.join("");
   }
 
   function randomPassEvent(input: any) {
@@ -195,19 +195,19 @@ const PassRecord: React.FC<PassRecordProps> = ({
     }
   }
   const formatTimestamp = (timestamp: string | number): string => {
-    const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+    const ts =
+      typeof timestamp === "string" ? parseInt(timestamp, 10) : timestamp;
     const date = new Date(ts);
-  
+
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
-  
 
   //obtain data for the edit
   let data;
@@ -330,8 +330,8 @@ const PassRecord: React.FC<PassRecordProps> = ({
                   submitButtonText === "Saved!"
                     ? "green"
                     : isHoverSubmitButton
-                    ? "black"
-                    : "white"
+                      ? "black"
+                      : "white"
                 }`,
                 border: `${
                   submitButtonText === "Saved!"
@@ -437,8 +437,8 @@ const PassRecord: React.FC<PassRecordProps> = ({
                   submitButtonText2 === "Saved!"
                     ? "green"
                     : isHoverSubmitButton
-                    ? "black"
-                    : "white"
+                      ? "black"
+                      : "white"
                 }`,
                 border: `${
                   submitButtonText2 === "Saved!"

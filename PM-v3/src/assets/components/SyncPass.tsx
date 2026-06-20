@@ -10,7 +10,7 @@ import QrReader from "react-web-qr-reader";
 function SyncPass() {
   const [state, setState] = useState("intro");
   const [peerId, setPeerId]: any = useState(null);
-  const [qr_value, setQRValue]:any = useState("")
+  const [qr_value, setQRValue]: any = useState("");
   const remotePeerId: any = useRef(null);
   const peer: any = useRef(null);
   const userPassRef = useRef("");
@@ -26,7 +26,7 @@ function SyncPass() {
       encrypted_db.map(async (p: any) => ({
         id: p.id,
         data: await Crypto.decrypt(p.data, userPassRef.current),
-      }))
+      })),
     );
     const decrypt_json = decrypted.map((el) => {
       const info: {
@@ -52,23 +52,20 @@ function SyncPass() {
     return decrypt_json;
   };
 
-  const connect = (data:string="") => {
-    if(data===""){
+  const connect = (data: string = "") => {
+    if (data === "") {
       const input = document.getElementById("remoteId") as HTMLInputElement;
       remotePeerId.current = input.value;
-    }
-    else{
+    } else {
       remotePeerId.current = data;
     }
-    
+
     const conn = peer.current.connect(remotePeerId.current);
     conn.on("open", async () => {
-      console.log("Connected to peer:", remotePeerId.current);
       const data = await DB.load();
       conn.send({ type: "msg", data: data });
     });
     conn.on("data", (data: any) => {
-      console.log(data);
       otherDB.current = data.data;
       syncDB();
       setState("connected");
@@ -126,7 +123,7 @@ function SyncPass() {
           const new_record = otherDB_decrypted[otherIndex];
           //if id already exists it must be an update record
           const found_index = ourDB_decrypted.findIndex(
-            (item) => item.id === new_record.id
+            (item) => item.id === new_record.id,
           );
           if (found_index > -1) {
             // need to update by the most recent
@@ -162,18 +159,15 @@ function SyncPass() {
 
     peer.current.on("open", (id: string) => {
       setPeerId(id);
-      console.log("My peer ID is: " + id);
     });
 
     peer.current.on("connection", (conn: any) => {
       conn.on("open", async () => {
-        console.log("Incoming connection from:", conn.peer);
         remotePeerId.current = conn.peer;
         const data = await DB.load();
-        conn.send({ type: "msg", data: data }); // Fixed typo here
+        conn.send({ type: "msg", data: data });
       });
       conn.on("data", (data: any) => {
-        console.log(data);
         otherDB.current = data.data;
         syncDB();
         setState("connected");
@@ -197,7 +191,7 @@ function SyncPass() {
     scan: () => {
       return (
         <>
-        <button
+          <button
             style={{ position: "absolute", top: "10px", left: "10px" }}
             onClick={() => setState("manage")}
           >
@@ -207,16 +201,15 @@ function SyncPass() {
             onError={(error) => {
               console.log(error);
             }}
-            onScan={(result:any) => {
+            onScan={(result: any) => {
               if (result) {
-
-                connect( result.data)
-                setQRValue(result.data)
+                connect(result.data);
+                setQRValue(result.data);
               }
             }}
             style={{
-              width:"300px",
-              height:"300px",
+              width: "300px",
+              height: "300px",
             }}
           />
           <p>{qr_value}</p>
@@ -234,10 +227,14 @@ function SyncPass() {
           </button>
 
           <h2 style={{ margin: "10px" }}>Sync ID: </h2>
-          <QRCodeSVG value={peerId} size={156} style={{
-            padding:"20px",
-            backgroundColor:"white"
-          }} />
+          <QRCodeSVG
+            value={peerId}
+            size={156}
+            style={{
+              padding: "20px",
+              backgroundColor: "white",
+            }}
+          />
           <p style={{ fontSize: "large", userSelect: "auto" }}>{peerId}</p>
 
           <button

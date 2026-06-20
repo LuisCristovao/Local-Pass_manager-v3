@@ -8,7 +8,12 @@ function uint8ToStr(bytes: Uint8Array): string {
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -23,21 +28,21 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 // --- Key Derivation ---
 async function deriveKey(
   password: string,
-  salt: Uint8Array
+  salt: Uint8Array,
 ): Promise<CryptoKey> {
   const passwordKey = await crypto.subtle.importKey(
     "raw",
     strToUint8(password),
     "PBKDF2",
     false,
-    ["deriveKey"]
+    ["deriveKey"],
   );
 
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt,
-      iterations: 100000,
+      iterations: 600000,
       hash: "SHA-256",
     },
     passwordKey,
@@ -46,7 +51,7 @@ async function deriveKey(
       length: 256,
     },
     false,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -59,7 +64,7 @@ export async function encrypt(text: string, password: string): Promise<string> {
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    strToUint8(text)
+    strToUint8(text),
   );
 
   const combined = new Uint8Array([
@@ -74,7 +79,7 @@ export async function encrypt(text: string, password: string): Promise<string> {
 // --- Decryption ---
 export async function decrypt(
   encryptedBase64: string,
-  password: string
+  password: string,
 ): Promise<string | null> {
   try {
     const encryptedBytes = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
@@ -87,7 +92,7 @@ export async function decrypt(
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       key,
-      data
+      data,
     );
 
     return uint8ToStr(new Uint8Array(decrypted));
@@ -98,12 +103,11 @@ export async function decrypt(
 
 export async function canDecrypt(
   encryptedBase64: string,
-  password: string
+  password: string,
 ): Promise<boolean> {
   const result = await decrypt(encryptedBase64, password);
   return result !== null;
 }
-
 
 // --- SHA-256 Hash ---
 export async function sha256(message: string): Promise<string> {

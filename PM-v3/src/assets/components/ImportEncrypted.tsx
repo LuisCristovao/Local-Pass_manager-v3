@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState } from "react";
 import * as DB from "../utils/dbUtils";
 // import * as Crypto from "../utils/cryptoUtils";
 import { useNavigate } from "react-router-dom"; // Add this import
@@ -11,17 +11,35 @@ function ImportEncrypted() {
 
   const [success, setSuccess] = useState<string>("nothing");
 
+  const isValidEncryptedRecord = (
+    record: unknown,
+  ): record is { id: string; data: string } => {
+    return (
+      typeof record === "object" &&
+      record !== null &&
+      !Array.isArray(record) &&
+      typeof (record as Record<string, unknown>).id === "string" &&
+      typeof (record as Record<string, unknown>).data === "string" &&
+      Object.keys(record as object).length === 2
+    );
+  };
+
+  const parseAndValidate = (raw: string): { id: string; data: string }[] => {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("Expected a JSON array");
+    if (!parsed.every(isValidEncryptedRecord))
+      throw new Error("Invalid record shape");
+    return parsed;
+  };
+
   const overwrite = async (encrypted_data: string) => {
     if (encrypted_data !== "") {
-      const encrypted_data_json: [] = JSON.parse(encrypted_data);
-      //clear db then append  records
       try {
+        const encrypted_data_json = parseAndValidate(encrypted_data);
         DB.clearDatabase();
-
         encrypted_data_json.forEach((record) => {
           DB.add(record);
         });
-
         return "success";
       } catch (err) {
         return "error";
@@ -32,9 +50,8 @@ function ImportEncrypted() {
 
   const append = async (encrypted_data: string) => {
     if (encrypted_data !== "") {
-      const encrypted_data_json: [] = JSON.parse(encrypted_data);
-      //append to the db the records
       try {
+        const encrypted_data_json = parseAndValidate(encrypted_data);
         encrypted_data_json.forEach((record) => {
           DB.add(record);
         });
@@ -47,7 +64,7 @@ function ImportEncrypted() {
   };
   const navigate = useNavigate();
 
-  const renderSuccessMessage=() =>{
+  const renderSuccessMessage = () => {
     if (success === "success") {
       return <p>Success </p>;
     } else if (success === "error") {
@@ -57,7 +74,7 @@ function ImportEncrypted() {
     } else {
       return null;
     }
-  }
+  };
 
   return (
     <>
@@ -80,7 +97,7 @@ function ImportEncrypted() {
           marginBottom: "20px",
           backgroundColor: "transparent",
           fontSize: "1.5em",
-          color:"aliceblue"
+          color: "aliceblue",
         }}
         placeholder="Insert Encrypted JSON here..."
       ></textarea>
@@ -93,7 +110,7 @@ function ImportEncrypted() {
         <button
           onClick={async () => {
             const textarea = document.getElementById(
-              "import encrypted data"
+              "import encrypted data",
             ) as HTMLTextAreaElement;
             const output = await overwrite(textarea.value);
             setSuccess(output);
@@ -104,7 +121,7 @@ function ImportEncrypted() {
         <button
           onClick={async () => {
             const textarea = document.getElementById(
-              "import encrypted data"
+              "import encrypted data",
             ) as HTMLTextAreaElement;
             const output = await append(textarea.value);
             setSuccess(output);
@@ -113,9 +130,7 @@ function ImportEncrypted() {
           Append
         </button>
       </div>
-      {
-        renderSuccessMessage()
-      }
+      {renderSuccessMessage()}
     </>
   );
 }
