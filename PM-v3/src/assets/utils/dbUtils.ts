@@ -31,6 +31,9 @@ export async function add(
     await db.add(STORE_NAME, {
       id: record.id, // ✅ Key path
       data: encrypted_data, // ✅ Encrypted data
+      sync: record.sync,
+      timestamp: record.timestamp,
+      is_deleted: record.is_deleted,
     });
   }else{// already encrypted
     await db.add(STORE_NAME,record)
@@ -65,6 +68,9 @@ export async function update(
   await db.put(STORE_NAME, {
     id: id,
     data: encrypted_data,
+    sync: newData.sync,
+    timestamp: newData.timestamp,
+    is_deleted: newData.is_deleted,
   });
 }
 

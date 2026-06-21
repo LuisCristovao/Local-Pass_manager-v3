@@ -1,6 +1,5 @@
 import { useState } from "react";
 import * as DB from "../utils/dbUtils";
-// import * as Crypto from "../utils/cryptoUtils";
 import { useNavigate } from "react-router-dom"; // Add this import
 
 function ImportEncrypted() {
@@ -11,20 +10,27 @@ function ImportEncrypted() {
 
   const [success, setSuccess] = useState<string>("nothing");
 
+  type EncryptedRecord = {
+    id: string;
+    data: string;
+    sync?: string;
+    timestamp?: string;
+    is_deleted?: string;
+  };
+
   const isValidEncryptedRecord = (
     record: unknown,
-  ): record is { id: string; data: string } => {
+  ): record is EncryptedRecord => {
     return (
       typeof record === "object" &&
       record !== null &&
       !Array.isArray(record) &&
       typeof (record as Record<string, unknown>).id === "string" &&
-      typeof (record as Record<string, unknown>).data === "string" &&
-      Object.keys(record as object).length === 2
+      typeof (record as Record<string, unknown>).data === "string"
     );
   };
 
-  const parseAndValidate = (raw: string): { id: string; data: string }[] => {
+  const parseAndValidate = (raw: string): EncryptedRecord[] => {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error("Expected a JSON array");
     if (!parsed.every(isValidEncryptedRecord))
@@ -32,14 +38,23 @@ function ImportEncrypted() {
     return parsed;
   };
 
+  const normalizeMetadata = (records: EncryptedRecord[]): EncryptedRecord[] => {
+    return records.map((record) => ({
+      id: record.id,
+      data: record.data,
+      ...(record.sync ? { sync: record.sync } : {}),
+      ...(record.timestamp ? { timestamp: record.timestamp } : {}),
+      ...(record.is_deleted ? { is_deleted: record.is_deleted } : {}),
+    }));
+  };
+
   const overwrite = async (encrypted_data: string) => {
     if (encrypted_data !== "") {
       try {
         const encrypted_data_json = parseAndValidate(encrypted_data);
-        DB.clearDatabase();
-        encrypted_data_json.forEach((record) => {
-          DB.add(record);
-        });
+        const normalized = normalizeMetadata(encrypted_data_json);
+        await DB.clearDatabase();
+        await Promise.all(normalized.map((record) => DB.add(record)));
         return "success";
       } catch (err) {
         return "error";
@@ -52,9 +67,8 @@ function ImportEncrypted() {
     if (encrypted_data !== "") {
       try {
         const encrypted_data_json = parseAndValidate(encrypted_data);
-        encrypted_data_json.forEach((record) => {
-          DB.add(record);
-        });
+        const normalized = normalizeMetadata(encrypted_data_json);
+        await Promise.all(normalized.map((record) => DB.add(record)));
         return "success";
       } catch (err) {
         return "error";

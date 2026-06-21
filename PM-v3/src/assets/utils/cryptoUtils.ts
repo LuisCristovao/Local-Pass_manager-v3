@@ -3,6 +3,13 @@ function strToUint8(str: string): Uint8Array {
   return new TextEncoder().encode(str);
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+}
+
 function uint8ToStr(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
@@ -25,24 +32,40 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-// --- Key Derivation ---
-async function deriveKey(
-  password: string,
-  salt: Uint8Array,
-): Promise<CryptoKey> {
-  const passwordKey = await crypto.subtle.importKey(
+let cachedPassword = "";
+let cachedPasswordKey: CryptoKey | null = null;
+
+async function getPasswordKey(password: string): Promise<CryptoKey> {
+  if (cachedPasswordKey && cachedPassword === password) {
+    return cachedPasswordKey;
+  }
+
+  const imported = await crypto.subtle.importKey(
     "raw",
-    strToUint8(password),
+    toArrayBuffer(strToUint8(password)),
     "PBKDF2",
     false,
     ["deriveKey"],
   );
 
+  cachedPassword = password;
+  cachedPasswordKey = imported;
+  return imported;
+}
+
+// --- Key Derivation ---
+async function deriveKey(
+  password: string,
+  salt: Uint8Array,
+  iterations: number = 200000,
+): Promise<CryptoKey> {
+  const passwordKey = await getPasswordKey(password);
+
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt,
-      iterations: 600000,
+      salt: toArrayBuffer(salt),
+      iterations: iterations,
       hash: "SHA-256",
     },
     passwordKey,
@@ -64,7 +87,7 @@ export async function encrypt(text: string, password: string): Promise<string> {
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    strToUint8(text),
+    toArrayBuffer(strToUint8(text)),
   );
 
   const combined = new Uint8Array([
@@ -81,23 +104,29 @@ export async function decrypt(
   encryptedBase64: string,
   password: string,
 ): Promise<string | null> {
-  try {
-    const encryptedBytes = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
-    const salt = encryptedBytes.slice(0, 16);
-    const iv = encryptedBytes.slice(16, 28);
-    const data = encryptedBytes.slice(28);
+  const encryptedBytes = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
+  const salt = encryptedBytes.slice(0, 16);
+  const iv = encryptedBytes.slice(16, 28);
+  const data = encryptedBytes.slice(28);
 
-    const key = await deriveKey(password, salt);
-
+  const tryDecryptWithIterations = async (iterations: number) => {
+    const key = await deriveKey(password, salt, iterations);
     const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      { name: "AES-GCM", iv: toArrayBuffer(iv) },
       key,
-      data,
+      toArrayBuffer(data),
     );
-
     return uint8ToStr(new Uint8Array(decrypted));
+  };
+
+  try {
+    return await tryDecryptWithIterations(200000);
   } catch {
-    return null;
+    try {
+      return await tryDecryptWithIterations(600000);
+    } catch {
+      return null;
+    }
   }
 }
 

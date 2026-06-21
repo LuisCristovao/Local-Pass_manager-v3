@@ -7,14 +7,28 @@ import * as Search from "../utils/searchUtils";
 import PassRecord from "./PassRecord";
 import InsertPassword from "./InsertPassword";
 
+type DecryptedRecord = {
+  id: string;
+  site: string;
+  user: string;
+  pass: string;
+  comments: string;
+  timestamp: string;
+  sync: string;
+  is_deleted: string;
+};
+
 function ManagePasswords() {
   const [state, setState] = useState("intro");
 
   const [decryptedPasswords, setDecryptedPasswords] = useState<
     Record<string, any>[]
   >([]);
+  const [isDecrypting, setIsDecrypting] = useState(false);
   const userPassRef = useRef<string>(""); // default value is an empty string
   const storedPasswords = useRef<Record<string, any>[]>([]); // default value is an empty string
+  const decryptedCache = useRef<Map<string, Record<string, any>>>(new Map());
+  const activePasswordRef = useRef<string>("");
   const number_of_pass_update = useRef("");
 
   const [editRecordId, setEditRecordId] = useState("");
@@ -36,48 +50,99 @@ function ManagePasswords() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
+  type RecordToDecrypt = {
+    id: string;
+    data: string;
+    cacheKey: string;
+  };
+
+  type DecryptedRecordResult = {
+    cacheKey: string;
+    value: DecryptedRecord;
+  };
+
+  const decryptRecords = async (
+    records: RecordToDecrypt[],
+    password: string,
+  ): Promise<DecryptedRecordResult[]> => {
+    const decrypted = await Promise.all(
+      records.map(async (record) => {
+        const decryptedText = await Crypto.decrypt(record.data, password);
+        if (!decryptedText) {
+          throw new Error("Failed to decrypt record");
+        }
+        const info = JSON.parse(decryptedText) as Omit<DecryptedRecord, "id">;
+        return {
+          cacheKey: record.cacheKey,
+          value: {
+            id: record.id,
+            site: info.site,
+            user: info.user,
+            pass: info.pass,
+            comments: info.comments,
+            timestamp: info.timestamp,
+            sync: info.sync,
+            is_deleted: info.is_deleted,
+          },
+        };
+      }),
+    );
+
+    return decrypted;
+  };
+
   const decryptAllPasswords = async () => {
+    setIsDecrypting(true);
     const start = performance.now(); // Start timing
 
     const data = await DB.load(); // <-- freshly loaded passwords
 
-    const decrypted = await Promise.all(
-      data.map(async (p) => ({
-        id: p.id,
-        data: await Crypto.decrypt(p.data, userPassRef.current),
-      }))
+    // Clear cache if user switched master password.
+    if (activePasswordRef.current !== userPassRef.current) {
+      decryptedCache.current.clear();
+      activePasswordRef.current = userPassRef.current;
+    }
+
+    const nextCache = new Map<string, Record<string, any>>();
+    const recordsToDecrypt: RecordToDecrypt[] = [];
+
+    for (const p of data) {
+      const cacheKey = `${p.id}|${p.data}`;
+      const cached = decryptedCache.current.get(cacheKey);
+      if (cached) {
+        nextCache.set(cacheKey, cached);
+        continue;
+      }
+
+      recordsToDecrypt.push({ id: p.id, data: p.data, cacheKey });
+    }
+
+    const decryptedNew = await decryptRecords(
+      recordsToDecrypt,
+      userPassRef.current,
     );
-    const decrypt_json = decrypted.map((el) => {
-      const info: {
-        site: string;
-        user: string;
-        pass: string;
-        comments: string;
-        timestamp: string;
-        sync: string;
-        is_deleted: string;
-      } = JSON.parse(el.data || "");
-      return {
-        id: el.id,
-        site: info.site,
-        user: info.user,
-        pass: info.pass,
-        comments: info.comments,
-        timestamp: info.timestamp,
-        sync: info.sync,
-        is_deleted: info.is_deleted,
-      };
-    });
+    decryptedNew.forEach((entry) => nextCache.set(entry.cacheKey, entry.value));
+
+    const decrypt_json = data
+      .map((p) => nextCache.get(`${p.id}|${p.data}`))
+      .filter((el): el is Record<string, any> => Boolean(el));
+
+    decryptedCache.current = nextCache;
     const non_deleted_records = decrypt_json.filter(
       (el) => el.is_deleted === "false"
     );
-    const maxTimestampObj = non_deleted_records.reduce((max, current) => {
-      return current.timestamp > max.timestamp ? current : max;
-    }, decrypt_json[0]);
 
-    number_of_pass_update.current = `${
-      non_deleted_records.length
-    } || ${formatTimestamp(maxTimestampObj.timestamp)}`;
+    if (non_deleted_records.length > 0) {
+      const maxTimestampObj = non_deleted_records.reduce((max, current) => {
+        return current.timestamp > max.timestamp ? current : max;
+      }, non_deleted_records[0]);
+      number_of_pass_update.current = `${
+        non_deleted_records.length
+      } || ${formatTimestamp(maxTimestampObj.timestamp)}`;
+    } else {
+      number_of_pass_update.current = "0 || -";
+    }
+
     storedPasswords.current = decrypt_json;
     setDecryptedPasswords(decrypt_json);
 
@@ -90,6 +155,7 @@ function ManagePasswords() {
           : duration.toFixed(2) + " ms"
       }`
     );
+    setIsDecrypting(false);
   };
 
   //decrypt passwords in manage state
@@ -117,8 +183,10 @@ function ManagePasswords() {
     const resetTimer = () => {
       clearTimeout(timeout);
       timeout = window.setTimeout(() => {
+        decryptedCache.current.clear();
+        activePasswordRef.current = "";
         setState("intro"); // auto-reset after 10 mins of inactivity
-      }, 10 * 60 * 1000);
+      }, 5 * 60 * 1000);
     };
 
     const events = ["mousemove", "keydown", "mousedown", "touchstart"];
@@ -158,6 +226,24 @@ function ManagePasswords() {
             {number_of_pass_update.current}
           </p>
           <h1>Manage Passwords</h1>
+          {isDecrypting && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "20px",
+                fontSize: "16px",
+              }}
+            >
+              <p
+                style={{
+                  animation: "spin 1s linear infinite",
+                  display: "inline-block",
+                }}
+              >
+                🔄 Decrypting passwords...
+              </p>
+            </div>
+          )}
           <input
             type="text"
             placeholder="Search"

@@ -7,141 +7,252 @@ import * as Crypto from "../utils/cryptoUtils";
 import { QRCodeSVG } from "qrcode.react";
 import QrReader from "react-web-qr-reader";
 
-function SyncPass() {
-  const [state, setState] = useState("intro");
-  const [peerId, setPeerId]: any = useState(null);
-  const [qr_value, setQRValue]: any = useState("");
-  const remotePeerId: any = useRef(null);
-  const peer: any = useRef(null);
-  const userPassRef = useRef("");
-  const otherDB: any = useRef([]);
+type SyncState =
+  | "loading"
+  | "intro"
+  | "scan"
+  | "manage"
+  | "manual_input"
+  | "connecting"
+  | "syncing"
+  | "connected"
+  | "error";
 
+type SyncRecord = {
+  id: string;
+  site: string;
+  user: string;
+  pass: string;
+  comments: string;
+  timestamp: string;
+  sync: string;
+  is_deleted: string;
+};
+
+type SyncMeta = {
+  id: string;
+  sync: string;
+  timestamp: string;
+  is_deleted: string;
+};
+
+function SyncPass() {
+  const [state, setState] = useState<SyncState>("loading");
+  const [peerId, setPeerId] = useState<string>("");
+  const [qr_value, setQRValue] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState<string>("");
+  const remotePeerId = useRef<string>("");
+  const peer = useRef<Peer | null>(null);
+  const connectionRef = useRef<any>(null);
+  const connectTimeoutRef = useRef<number | null>(null);
+  const hasSyncedRef = useRef(false);
+  const syncDoneRef = useRef(false);
+  const userPassRef = useRef("");
+  const otherDB = useRef<Record<string, any>[]>([]);
+
+  const stateRef = useRef<SyncState>("loading");
   const navigate = useNavigate();
 
-  const decryptDB = async (encrypted_db: any[]) => {
-    if (encrypted_db.length == 0) {
-      return [];
+  const setStateAndRef = (s: SyncState) => {
+    stateRef.current = s;
+    setState(s);
+  };
+
+  const clearConnectTimeout = () => {
+    if (connectTimeoutRef.current !== null) {
+      window.clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
     }
-    const decrypted = await Promise.all(
-      encrypted_db.map(async (p: any) => ({
-        id: p.id,
-        data: await Crypto.decrypt(p.data, userPassRef.current),
-      })),
-    );
-    const decrypt_json = decrypted.map((el) => {
-      const info: {
-        site: string;
-        user: string;
-        pass: string;
-        comments: string;
-        timestamp: string;
-        sync: string;
-        is_deleted: string;
-      } = JSON.parse(el.data || "");
+  };
+
+  const safeDisconnectConnection = () => {
+    clearConnectTimeout();
+    if (connectionRef.current) {
+      try {
+        connectionRef.current.close();
+      } catch {
+        // no-op
+      }
+      connectionRef.current = null;
+    }
+    hasSyncedRef.current = false;
+  };
+
+  const setErrorState = (message: string) => {
+    setStatusMessage(message);
+    setStateAndRef("error");
+  };
+
+  const extractMeta = async (
+    record: Record<string, any>,
+  ): Promise<SyncMeta | null> => {
+    if (record.sync && record.timestamp && record.is_deleted) {
       return {
-        id: el.id,
-        site: info.site,
-        user: info.user,
-        pass: info.pass,
-        comments: info.comments,
-        timestamp: info.timestamp,
+        id: record.id,
+        sync: record.sync,
+        timestamp: record.timestamp,
+        is_deleted: record.is_deleted,
+      };
+    }
+
+    const decryptedText = await Crypto.decrypt(record.data, userPassRef.current);
+    if (!decryptedText) {
+      return null;
+    }
+
+    try {
+      const info = JSON.parse(decryptedText) as Omit<SyncRecord, "id">;
+      return {
+        id: record.id,
         sync: info.sync,
+        timestamp: info.timestamp,
         is_deleted: info.is_deleted,
       };
+    } catch {
+      return null;
+    }
+  };
+
+  const syncDB = async () => {
+    setStateAndRef("syncing");
+    try {
+      const ourDB = await DB.load();
+      if (ourDB.length == 0 || otherDB.current.length == 0) {
+        if (ourDB.length == 0 && otherDB.current.length > 0) {
+          await DB.replaceAllRecords(otherDB.current);
+        }
+      } else {
+        const ourMeta = await Promise.all(ourDB.map((record) => extractMeta(record)));
+        const otherMeta = await Promise.all(
+          otherDB.current.map((record) => extractMeta(record)),
+        );
+
+        if (ourMeta.some((meta) => meta === null) || otherMeta.some((meta) => meta === null)) {
+          throw new Error("Unable to decrypt or parse one or more records.");
+        }
+
+        const ourDB_meta = ourMeta as SyncMeta[];
+        const otherDB_meta = otherMeta as SyncMeta[];
+
+        const nextDB = [...ourDB];
+
+        for (let otherIndex = 0; otherIndex < otherDB_meta.length; otherIndex++) {
+          const otherRecord = otherDB_meta[otherIndex];
+          const exist_same_record = ourDB_meta.findIndex(
+            (item) => item.sync === otherRecord.sync,
+          );
+
+          if (exist_same_record > -1) {
+            if (ourDB_meta[exist_same_record].timestamp < otherRecord.timestamp) {
+              nextDB[exist_same_record] = otherDB.current[otherIndex];
+            } else if (
+              ourDB_meta[exist_same_record].is_deleted === "true" &&
+              ourDB_meta[exist_same_record].is_deleted === otherRecord.is_deleted
+            ) {
+              nextDB.splice(exist_same_record, 1);
+            }
+          } else {
+            const found_index = ourDB_meta.findIndex(
+              (item) => item.id === otherRecord.id,
+            );
+            if (found_index > -1) {
+              if (otherRecord.timestamp > ourDB_meta[found_index].timestamp) {
+                nextDB[found_index] = otherDB.current[otherIndex];
+              }
+            } else {
+              nextDB.push(otherDB.current[otherIndex]);
+            }
+          }
+        }
+
+        await DB.replaceAllRecords(nextDB);
+      }
+
+      setStatusMessage(`Success sync with ${remotePeerId.current}`);
+      syncDoneRef.current = true;
+      setStateAndRef("connected");
+    } catch {
+      setErrorState(
+        "Sync failed. Check that both devices use the same master password and try again.",
+      );
+    }
+  };
+
+  const bindConnection = (conn: any) => {
+    safeDisconnectConnection();
+    connectionRef.current = conn;
+    hasSyncedRef.current = false;
+    syncDoneRef.current = false;
+
+    conn.on("open", async () => {
+      clearConnectTimeout();
+      setStateAndRef("connecting");
+      try {
+        remotePeerId.current = conn.peer;
+        const data = await DB.load();
+        conn.send({ type: "msg", data: data });
+      } catch {
+        setErrorState("Could not send local database to remote peer.");
+      }
     });
-    return decrypt_json;
+
+    conn.on("data", (data: any) => {
+      if (hasSyncedRef.current) {
+        return;
+      }
+      hasSyncedRef.current = true;
+      otherDB.current = Array.isArray(data?.data) ? data.data : [];
+      void syncDB();
+    });
+
+    conn.on("error", () => {
+      setErrorState("Connection error while syncing.");
+      safeDisconnectConnection();
+    });
+
+    conn.on("close", () => {
+      if (!syncDoneRef.current && stateRef.current !== "connected" && stateRef.current !== "error") {
+        setErrorState("Connection closed before sync finished.");
+      }
+      safeDisconnectConnection();
+    });
   };
 
   const connect = (data: string = "") => {
-    if (data === "") {
+    if (!peer.current || !peerId) {
+      setErrorState("Local peer is still initializing. Please wait a moment.");
+      return;
+    }
+
+    if (data.trim() === "") {
       const input = document.getElementById("remoteId") as HTMLInputElement;
-      remotePeerId.current = input.value;
+      remotePeerId.current = input.value.trim();
     } else {
-      remotePeerId.current = data;
+      remotePeerId.current = data.trim();
     }
 
-    const conn = peer.current.connect(remotePeerId.current);
-    conn.on("open", async () => {
-      const data = await DB.load();
-      conn.send({ type: "msg", data: data });
-    });
-    conn.on("data", (data: any) => {
-      otherDB.current = data.data;
-      syncDB();
-      setState("connected");
-    });
-  };
-  const syncDB = async () => {
-    const ourDB = await DB.load();
-    if (ourDB.length == 0 || otherDB.current.length == 0) {
-      if (ourDB.length == 0 && otherDB.current.length > 0) {
-        await DB.replaceAllRecords(otherDB.current);
-      }
-      //other options are not required
-    } else {
-      //decrypt both DB to loop through each
-      const ourDB_decrypted = await decryptDB(ourDB);
-      const otherDB_decrypted = await decryptDB(otherDB.current);
-      const syncDB = [...ourDB];
-      let otherIndex;
-
-      for (
-        otherIndex = 0;
-        otherIndex < otherDB_decrypted.length;
-        otherIndex++
-      ) {
-        const otherRecord = otherDB_decrypted[otherIndex];
-        let exist_same_record = -1;
-        let ourIndex;
-
-        for (ourIndex = 0; ourIndex < ourDB_decrypted.length; ourIndex++) {
-          const ourRecord = ourDB_decrypted[ourIndex];
-
-          if (ourRecord.sync === otherRecord.sync) {
-            exist_same_record = ourIndex;
-            break;
-          }
-        }
-
-        if (exist_same_record > -1) {
-          // sync hash already exists in ourDB
-          if (
-            ourDB_decrypted[exist_same_record].timestamp < otherRecord.timestamp
-          ) {
-            // Insert your logic for replacing with the most recent here
-            syncDB[exist_same_record] = otherDB.current[otherIndex];
-          } else if (
-            ourDB_decrypted[exist_same_record].is_deleted === "true" &&
-            ourDB_decrypted[exist_same_record].is_deleted ===
-              otherRecord.is_deleted
-          ) {
-            //same sync and timestamp and is_deleted flag is true and equal on both sides than delete
-            syncDB.splice(exist_same_record, 1);
-          }
-        } else {
-          //new record or update record
-          const new_record = otherDB_decrypted[otherIndex];
-          //if id already exists it must be an update record
-          const found_index = ourDB_decrypted.findIndex(
-            (item) => item.id === new_record.id,
-          );
-          if (found_index > -1) {
-            // need to update by the most recent
-            if (new_record.timestamp > ourDB_decrypted[found_index].timestamp) {
-              syncDB[found_index] = otherDB.current[otherIndex];
-            } else {
-              //skip because already have must recent record
-            }
-          } else {
-            //need to add to db
-            const to_add_record = otherDB.current[otherIndex];
-            syncDB.push(to_add_record);
-          }
-        }
-      }
-
-      await DB.replaceAllRecords(syncDB);
+    if (!remotePeerId.current) {
+      setErrorState("Please provide a valid remote sync ID.");
+      return;
     }
+
+    if (remotePeerId.current === peerId) {
+      setErrorState("Cannot connect to your own sync ID.");
+      return;
+    }
+
+    setStatusMessage("Connecting to remote peer...");
+    setStateAndRef("connecting");
+
+    const conn = peer.current.connect(remotePeerId.current, {
+      reliable: true,
+    });
+
+    bindConnection(conn);
+    connectTimeoutRef.current = window.setTimeout(() => {
+      setErrorState("Connection timeout. Check remote sync ID and try again.");
+      safeDisconnectConnection();
+    }, 10000);
   };
 
   // Initialize PeerJS and handle connections
@@ -149,9 +260,9 @@ function SyncPass() {
     const checkDatabase = async () => {
       const dbExists = await DB.load();
       if (dbExists.length > 0) {
-        setState("intro");
+        setStateAndRef("intro");
       } else {
-        setState("manage");
+        setStateAndRef("manage");
       }
     };
 
@@ -159,34 +270,49 @@ function SyncPass() {
 
     peer.current.on("open", (id: string) => {
       setPeerId(id);
+      setStatusMessage("");
+    });
+
+    peer.current.on("error", () => {
+      if (stateRef.current === "connecting" || stateRef.current === "syncing") {
+        setErrorState("Peer connection error. Please refresh and try again.");
+      }
+    });
+
+    peer.current.on("disconnected", () => {
+      if (stateRef.current === "connecting" || stateRef.current === "syncing") {
+        setErrorState("Peer disconnected. Please refresh and try again.");
+      }
     });
 
     peer.current.on("connection", (conn: any) => {
-      conn.on("open", async () => {
-        remotePeerId.current = conn.peer;
-        const data = await DB.load();
-        conn.send({ type: "msg", data: data });
-      });
-      conn.on("data", (data: any) => {
-        otherDB.current = data.data;
-        syncDB();
-        setState("connected");
-      });
+      remotePeerId.current = conn.peer;
+      setStatusMessage(`Incoming connection from ${conn.peer}`);
+      setStateAndRef("connecting");
+      bindConnection(conn);
     });
 
     checkDatabase(); // Call the async function on component mount
 
     return () => {
-      peer.current.destroy();
+      safeDisconnectConnection();
+      peer.current?.destroy();
     };
   }, []);
 
-  const page_states: any = {
+  const page_states = {
     loading: () => {
       return <p>Loading...</p>;
     },
     intro: () => {
-      return <InsertPassword userPassRef={userPassRef} setState={setState} />;
+      return (
+        <InsertPassword
+          userPassRef={userPassRef}
+          setState={(nextState) => {
+            setStateAndRef(nextState as SyncState);
+          }}
+        />
+      );
     },
     scan: () => {
       return (
@@ -240,7 +366,7 @@ function SyncPass() {
           <button
             style={{ marginTop: "20px" }}
             onClick={() => {
-              // connect();
+              setStatusMessage("");
               setState("scan");
             }}
           >
@@ -249,6 +375,7 @@ function SyncPass() {
           <button
             style={{ marginTop: "20px" }}
             onClick={() => {
+              setStatusMessage("");
               setState("manual_input");
             }}
           >
@@ -284,6 +411,31 @@ function SyncPass() {
         </>
       );
     },
+    connecting: () => {
+      return (
+        <>
+          <button
+            style={{ position: "absolute", top: "10px", left: "10px" }}
+            onClick={() => {
+              safeDisconnectConnection();
+              setState("manage");
+            }}
+          >
+            Cancel
+          </button>
+          <h2>Connecting...</h2>
+          <p>{statusMessage || "Trying to establish secure peer connection."}</p>
+        </>
+      );
+    },
+    syncing: () => {
+      return (
+        <>
+          <h2>Syncing...</h2>
+          <p>Comparing encrypted records and applying updates.</p>
+        </>
+      );
+    },
     connected: () => {
       return (
         <>
@@ -297,8 +449,10 @@ function SyncPass() {
           <h2>
             Success Sync with: <br /> <p>{remotePeerId.current}</p>
           </h2>
+          <p>{statusMessage}</p>
           <button
             onClick={() => {
+              setStatusMessage("");
               setState("manage");
             }}
           >
@@ -307,7 +461,32 @@ function SyncPass() {
         </>
       );
     },
-  };
+    error: () => {
+      return (
+        <>
+          <button
+            style={{ position: "absolute", top: "10px", left: "10px" }}
+            onClick={() => {
+              setStatusMessage("");
+              setState("manage");
+            }}
+          >
+            Go back
+          </button>
+          <h2>Connection Error</h2>
+          <p>{statusMessage || "Unexpected sync error."}</p>
+          <button
+            onClick={() => {
+              setStatusMessage("");
+              setState("manual_input");
+            }}
+          >
+            Retry
+          </button>
+        </>
+      );
+    },
+  } satisfies Record<SyncState, () => React.ReactElement>;
 
   return page_states[state]();
 
