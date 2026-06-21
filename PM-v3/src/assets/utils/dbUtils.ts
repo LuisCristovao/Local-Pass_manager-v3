@@ -15,7 +15,7 @@ const dbPromise = openDB(DB_NAME, 1, {
 // Add a new record (auto-generates UUID if none is provided)
 export async function add(
   record: Record<string, any>,
-  password: string = ""
+  password: string = "",
 ): Promise<string> {
   const db = await dbPromise;
 
@@ -25,7 +25,7 @@ export async function add(
   if (password !== "") {
     const encrypted_data = await Crypto.encrypt(
       JSON.stringify(record),
-      password
+      password,
     );
 
     await db.add(STORE_NAME, {
@@ -35,8 +35,9 @@ export async function add(
       timestamp: record.timestamp,
       is_deleted: record.is_deleted,
     });
-  }else{// already encrypted
-    await db.add(STORE_NAME,record)
+  } else {
+    // already encrypted
+    await db.add(STORE_NAME, record);
   }
 
   return record.id;
@@ -52,7 +53,7 @@ export async function load(): Promise<Record<string, any>[]> {
 export async function update(
   id: string,
   newData: Record<string, any>,
-  password: string
+  password: string,
 ): Promise<void> {
   const db = await dbPromise;
 
@@ -62,7 +63,7 @@ export async function update(
   }
   const encrypted_data = await Crypto.encrypt(
     JSON.stringify(newData),
-    password
+    password,
   );
 
   await db.put(STORE_NAME, {
@@ -123,11 +124,10 @@ export async function databaseExists(): Promise<boolean> {
   });
 }
 
-
 // Replace all records with the new records provided
 export async function replaceAllRecords(
   newRecords: Record<string, any>[],
-  password: string = ""
+  password: string = "",
 ): Promise<void> {
   // Clear the existing records using the existing clearDatabase function
   await clearDatabase();
@@ -137,7 +137,6 @@ export async function replaceAllRecords(
     await add(record, password);
   }
 }
-
 
 // ONLY for development/debugging
 // if (typeof window !== "undefined") {

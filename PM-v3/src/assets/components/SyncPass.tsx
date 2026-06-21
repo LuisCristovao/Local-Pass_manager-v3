@@ -95,7 +95,10 @@ function SyncPass() {
       };
     }
 
-    const decryptedText = await Crypto.decrypt(record.data, userPassRef.current);
+    const decryptedText = await Crypto.decrypt(
+      record.data,
+      userPassRef.current,
+    );
     if (!decryptedText) {
       return null;
     }
@@ -122,12 +125,17 @@ function SyncPass() {
           await DB.replaceAllRecords(otherDB.current);
         }
       } else {
-        const ourMeta = await Promise.all(ourDB.map((record) => extractMeta(record)));
+        const ourMeta = await Promise.all(
+          ourDB.map((record) => extractMeta(record)),
+        );
         const otherMeta = await Promise.all(
           otherDB.current.map((record) => extractMeta(record)),
         );
 
-        if (ourMeta.some((meta) => meta === null) || otherMeta.some((meta) => meta === null)) {
+        if (
+          ourMeta.some((meta) => meta === null) ||
+          otherMeta.some((meta) => meta === null)
+        ) {
           throw new Error("Unable to decrypt or parse one or more records.");
         }
 
@@ -136,18 +144,25 @@ function SyncPass() {
 
         const nextDB = [...ourDB];
 
-        for (let otherIndex = 0; otherIndex < otherDB_meta.length; otherIndex++) {
+        for (
+          let otherIndex = 0;
+          otherIndex < otherDB_meta.length;
+          otherIndex++
+        ) {
           const otherRecord = otherDB_meta[otherIndex];
           const exist_same_record = ourDB_meta.findIndex(
             (item) => item.sync === otherRecord.sync,
           );
 
           if (exist_same_record > -1) {
-            if (ourDB_meta[exist_same_record].timestamp < otherRecord.timestamp) {
+            if (
+              ourDB_meta[exist_same_record].timestamp < otherRecord.timestamp
+            ) {
               nextDB[exist_same_record] = otherDB.current[otherIndex];
             } else if (
               ourDB_meta[exist_same_record].is_deleted === "true" &&
-              ourDB_meta[exist_same_record].is_deleted === otherRecord.is_deleted
+              ourDB_meta[exist_same_record].is_deleted ===
+                otherRecord.is_deleted
             ) {
               nextDB.splice(exist_same_record, 1);
             }
@@ -211,7 +226,11 @@ function SyncPass() {
     });
 
     conn.on("close", () => {
-      if (!syncDoneRef.current && stateRef.current !== "connected" && stateRef.current !== "error") {
+      if (
+        !syncDoneRef.current &&
+        stateRef.current !== "connected" &&
+        stateRef.current !== "error"
+      ) {
         setErrorState("Connection closed before sync finished.");
       }
       safeDisconnectConnection();
@@ -424,7 +443,9 @@ function SyncPass() {
             Cancel
           </button>
           <h2>Connecting...</h2>
-          <p>{statusMessage || "Trying to establish secure peer connection."}</p>
+          <p>
+            {statusMessage || "Trying to establish secure peer connection."}
+          </p>
         </>
       );
     },

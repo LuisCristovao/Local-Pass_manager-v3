@@ -129,7 +129,7 @@ function ManagePasswords() {
 
     decryptedCache.current = nextCache;
     const non_deleted_records = decrypt_json.filter(
-      (el) => el.is_deleted === "false"
+      (el) => el.is_deleted === "false",
     );
 
     if (non_deleted_records.length > 0) {
@@ -153,7 +153,7 @@ function ManagePasswords() {
         duration > 1000
           ? (duration / 1000).toFixed(2) + "s"
           : duration.toFixed(2) + " ms"
-      }`
+      }`,
     );
     setIsDecrypting(false);
   };
@@ -182,11 +182,14 @@ function ManagePasswords() {
 
     const resetTimer = () => {
       clearTimeout(timeout);
-      timeout = window.setTimeout(() => {
-        decryptedCache.current.clear();
-        activePasswordRef.current = "";
-        setState("intro"); // auto-reset after 10 mins of inactivity
-      }, 5 * 60 * 1000);
+      timeout = window.setTimeout(
+        () => {
+          decryptedCache.current.clear();
+          activePasswordRef.current = "";
+          setState("intro"); // auto-reset after 10 mins of inactivity
+        },
+        5 * 60 * 1000,
+      );
     };
 
     const events = ["mousemove", "keydown", "mousedown", "touchstart"];
@@ -253,10 +256,10 @@ function ManagePasswords() {
               if (search_text !== "") {
                 const found_indexes = Search.findBestMatchs(
                   storedPasswords.current,
-                  search_text
+                  search_text,
                 );
                 const filtered = found_indexes.map(
-                  (i) => storedPasswords.current[i]
+                  (i) => storedPasswords.current[i],
                 );
                 setDecryptedPasswords(filtered);
               } else {
