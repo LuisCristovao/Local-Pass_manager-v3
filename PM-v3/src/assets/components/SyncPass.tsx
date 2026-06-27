@@ -408,7 +408,10 @@ function SyncPass() {
         <>
           <button
             style={{ position: "absolute", top: "10px", left: "10px" }}
-            onClick={() => navigate("/")}
+            onClick={() => {
+              setStatusMessage("");
+              setState("manage");
+            }}
           >
             Go back
           </button>
